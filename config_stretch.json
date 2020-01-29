@@ -1,0 +1,65 @@
+{
+    "description": "Kathara Network Plugin",
+    "documentation": "https://docs.docker.com/engine/extend/config/",
+    "entrypoint": [
+        "./entrypoint.sh"
+    ],
+    "workdir": "/app",
+    "mounts": [
+        {
+            "destination": "/run/docker/plugins",
+            "name": "run_docker_plugins",
+            "options": [
+                "rbind"
+            ],
+            "source": "/run/docker/plugins",
+            "type": "bind"
+        },
+        {
+            "destination": "/var/run/docker",
+            "name": "var_run_docker",
+            "options": [
+                "rbind"
+            ],
+            "source": "/var/run/docker",
+            "type": "bind"
+        },
+        {
+            "destination": "/var/run/docker.sock",
+            "name": "var_run_docker_sock",
+            "options": [
+                "rbind"
+            ],
+            "source": "/var/run/docker.sock",
+            "type": "bind"
+        },
+        {
+            "destination": "/run/xtables.lock",
+            "name": "run_xtables",
+            "options": [
+                "rbind"
+            ],
+            "settable": [
+                "source"
+            ],
+            "source": "/run/xtables.lock",
+            "type": "bind"
+        }
+    ],
+    "interface": {
+        "socket": "/katharanp.sock",
+        "types": [
+            "docker.networkdriver/1.0"
+        ]
+    },
+    "linux": {
+        "capabilities": [
+            "CAP_SYS_ADMIN",
+            "CAP_NET_ADMIN",
+            "CAP_NET_RAW"
+        ]
+    },
+    "network": {
+        "type": "host"
+    }
+}
