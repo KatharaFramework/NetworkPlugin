@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net"
+	"sync"
 
 	"github.com/docker/go-plugins-helpers/network"
 	"github.com/docker/libnetwork/types"
@@ -27,6 +28,7 @@ type katharaNetwork struct {
 type KatharaNetworkPlugin struct {
 	scope    string
 	networks map[string]*katharaNetwork
+	sync.Mutex
 }
 
 func (k *KatharaNetworkPlugin) GetCapabilities() (*network.CapabilitiesResponse, error) {
@@ -42,6 +44,9 @@ func (k *KatharaNetworkPlugin) GetCapabilities() (*network.CapabilitiesResponse,
 func (k *KatharaNetworkPlugin) CreateNetwork(req *network.CreateNetworkRequest) error {
 	log.Printf("Received CreateNetwork req:\n%+v\n", req)
 
+	k.Lock()
+	defer k.Unlock()
+	
 	if _, ok := k.networks[req.NetworkID]; ok {
 		return types.ForbiddenErrorf("network %s exists", req.NetworkID)
 	}
@@ -69,6 +74,9 @@ func (k *KatharaNetworkPlugin) DeleteNetwork(req *network.DeleteNetworkRequest) 
 		return err
 	}
 
+	k.Lock()
+	defer k.Unlock()
+
 	delete(k.networks, req.NetworkID)
 
 	return nil
@@ -88,6 +96,9 @@ func (k *KatharaNetworkPlugin) FreeNetwork(req *network.FreeNetworkRequest) erro
 
 func (k *KatharaNetworkPlugin) CreateEndpoint(req *network.CreateEndpointRequest) (*network.CreateEndpointResponse, error) {
 	log.Printf("Received CreateEndpoint req:\n%+v\n", req)
+
+	k.Lock()
+	defer k.Unlock()
 
 	intfInfo := new(network.EndpointInterface)
 
@@ -113,6 +124,9 @@ func (k *KatharaNetworkPlugin) CreateEndpoint(req *network.CreateEndpointRequest
 func (k *KatharaNetworkPlugin) DeleteEndpoint(req *network.DeleteEndpointRequest) error {
 	log.Printf("Received DeleteEndpoint req:\n%+v\n", req)
 
+	k.Lock()
+	defer k.Unlock()
+
 	delete(k.networks[req.NetworkID].endpoints, req.EndpointID)
 
 	return nil
@@ -137,6 +151,9 @@ func (k *KatharaNetworkPlugin) EndpointInfo(req *network.InfoRequest) (*network.
 
 func (k *KatharaNetworkPlugin) Join(req *network.JoinRequest) (*network.JoinResponse, error) {
 	log.Printf("Received Join req:\n%+v\n", req)
+
+	k.Lock()
+	defer k.Unlock()
 
 	endpointInfo := k.networks[req.NetworkID].endpoints[req.EndpointID]
 	vethInside, vethOutside, err := createVethPair(endpointInfo.macAddress)
@@ -165,6 +182,9 @@ func (k *KatharaNetworkPlugin) Join(req *network.JoinRequest) (*network.JoinResp
 
 func (k *KatharaNetworkPlugin) Leave(req *network.LeaveRequest) error {
 	log.Printf("Received Leave req:\n%+v\n", req)
+
+	k.Lock()
+	defer k.Unlock()
 
 	endpointInfo := k.networks[req.NetworkID].endpoints[req.EndpointID]
 
