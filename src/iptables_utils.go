@@ -32,7 +32,7 @@ func programChainRule(rule iptRule, insert bool) error {
 
 	if condition {
 		if err := iptables.RawCombinedOutput(append(prefix, rule.args...)...); err != nil {
-			return fmt.Errorf("Unable to %s rule: %s", operation, err.Error())
+			return fmt.Errorf("unable to %s rule: %s", operation, err.Error())
 		}
 	}
 

@@ -56,12 +56,12 @@ func (k *KatharaNetworkPlugin) CreateNetwork(req *network.CreateNetworkRequest) 
 		return err
 	}
 
-	network := &katharaNetwork{
+	katharaNetwork := &katharaNetwork{
 		bridgeName: bridgeName,
 		endpoints:  make(map[string]*katharaEndpoint),
 	}
 
-	k.networks[req.NetworkID] = network
+	k.networks[req.NetworkID] = katharaNetwork
 
 	return nil
 }
@@ -161,8 +161,7 @@ func (k *KatharaNetworkPlugin) Join(req *network.JoinRequest) (*network.JoinResp
 		return nil, err
 	}
 
-	err = attachInterfaceToBridge(k.networks[req.NetworkID].bridgeName, vethOutside)
-	if err != nil {
+	if err := attachInterfaceToBridge(k.networks[req.NetworkID].bridgeName, vethOutside); err != nil {
 		return nil, err
 	}
 
@@ -188,7 +187,9 @@ func (k *KatharaNetworkPlugin) Leave(req *network.LeaveRequest) error {
 
 	endpointInfo := k.networks[req.NetworkID].endpoints[req.EndpointID]
 
-	deleteVethPair(endpointInfo.vethOutside)
+	if err := deleteVethPair(endpointInfo.vethOutside); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -235,5 +236,7 @@ func main() {
 
 	requestHandler := network.NewHandler(driver)
 
-	requestHandler.ServeUnix(PLUGIN_NAME, PLUGIN_GUID)
+	if err := requestHandler.ServeUnix(PLUGIN_NAME, PLUGIN_GUID); err != nil {
+		log.Fatalf("ERROR: %s init failed!", PLUGIN_NAME)
+	}
 }

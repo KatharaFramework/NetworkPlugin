@@ -14,9 +14,9 @@ const (
 )
 
 func randomVethName() string {
-	uuid, _ := uuid.NewRandom()
+	randomUuid, _ := uuid.NewRandom()
 
-	return vethPrefix + strings.Replace(uuid.String(), "-", "", -1)[:vethLen]
+	return vethPrefix + strings.Replace(randomUuid.String(), "-", "", -1)[:vethLen]
 }
 
 func createVethPair(macAddress net.HardwareAddr) (string, string, error) {
@@ -27,11 +27,10 @@ func createVethPair(macAddress net.HardwareAddr) (string, string, error) {
 	linkAttrs.Name = vethName1
 	linkAttrs.HardwareAddr = macAddress
 
-	err := netlink.LinkAdd(&netlink.Veth{
+	if err := netlink.LinkAdd(&netlink.Veth{
 		LinkAttrs: linkAttrs,
 		PeerName:  vethName2,
-	})
-	if err != nil {
+	}); err != nil {
 		return "", "", err
 	}
 
@@ -44,7 +43,9 @@ func deleteVethPair(vethOutside string) error {
 		return err
 	}
 
-	netlink.LinkDel(iface)
+	if err := netlink.LinkDel(iface); err != nil {
+		return err
+	}
 
 	return nil
 }

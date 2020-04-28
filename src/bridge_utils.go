@@ -32,10 +32,9 @@ func createBridge(netID string) (string, error) {
 		linkAttrs := netlink.NewLinkAttrs()
 		linkAttrs.Name = bridgeName
 
-		err := netlink.LinkAdd(&netlink.Bridge{
+		if err := netlink.LinkAdd(&netlink.Bridge{
 			LinkAttrs: linkAttrs,
-		})
-		if err != nil {
+		}); err != nil {
 			return "", err
 		}
 	}
@@ -45,14 +44,15 @@ func createBridge(netID string) (string, error) {
 		return "", err
 	}
 
-	var outRule = iptRule{table: iptables.Filter, chain: "FORWARD", args: []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"}}
-	err = programChainRule(outRule, true)
-	if err != nil {
+	var outRule = iptRule{table: iptables.Filter,
+						  chain: "FORWARD",
+						  args: []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"},
+						  }
+	if err := programChainRule(outRule, true); err != nil {
 		return "", err
 	}
 
-	err = patchBridge(bridge)
-	if err != nil {
+	if err := patchBridge(bridge); err != nil {
 		return "", err
 	}
 
@@ -98,11 +98,15 @@ func deleteBridge(netID string) error {
 		return err
 	}
 
-	netlink.LinkDel(bridge)
+	if err := netlink.LinkDel(bridge); err != nil {
+		return err
+	}
 
-	var outRule = iptRule{table: iptables.Filter, chain: "FORWARD", args: []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"}}
-	err = programChainRule(outRule, false)
-	if err != nil {
+	var outRule = iptRule{table: iptables.Filter,
+						  chain: "FORWARD",
+						  args: []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"},
+						  }
+	if err := programChainRule(outRule, false); err != nil {
 		return err
 	}
 
@@ -120,8 +124,12 @@ func attachInterfaceToBridge(bridgeName string, interfaceName string) error {
 		return err
 	}
 
-	netlink.LinkSetMaster(iface, bridge)
-	netlink.LinkSetUp(iface)
+	if err := netlink.LinkSetMaster(iface, bridge); err != nil {
+		return err
+	}
+	if err := netlink.LinkSetUp(iface); err != nil {
+		return err
+	}
 
 	return nil
 }
