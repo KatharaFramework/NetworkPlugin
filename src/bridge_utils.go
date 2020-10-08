@@ -44,11 +44,8 @@ func createBridge(netID string) (string, error) {
 		return "", err
 	}
 
-	var outRule = iptRule{table: iptables.Filter,
-						  chain: "FORWARD",
-						  args: []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"},
-						  }
-	if err := programChainRule(outRule, true); err != nil {
+	var bridgeRule = []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"}
+	if err := iptables.ProgramRule(iptables.Filter, "FORWARD", iptables.Append, bridgeRule); err != nil {
 		return "", err
 	}
 
@@ -102,11 +99,8 @@ func deleteBridge(netID string) error {
 		return err
 	}
 
-	var outRule = iptRule{table: iptables.Filter,
-						  chain: "FORWARD",
-						  args: []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"},
-						  }
-	if err := programChainRule(outRule, false); err != nil {
+	var bridgeRule = []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"}
+	if err := iptables.ProgramRule(iptables.Filter, "FORWARD", iptables.Delete, bridgeRule); err != nil {
 		return err
 	}
 
