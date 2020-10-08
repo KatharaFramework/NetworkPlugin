@@ -8,16 +8,9 @@ To avoid assigning any IP subnet you **MUST** use `--ipam-driver=null` when crea
 
 ## Build from the source
 
-The plugin is released with two different tags, since `iptables` v1.6 and v1.8 have different requirements.
-
-To build `iptables v1.6` version type on terminal:
+To build the plugin, type on terminal:
 ```
-$ make all_stretch
-```
-
-To build `iptables v1.8` version type on terminal:
-```
-$ make all_buster
+$ make all
 ```
 
 Of course, Golang should be installed (all dependencies are automatically resolved).

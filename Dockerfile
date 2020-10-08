@@ -1,4 +1,4 @@
-FROM debian:__RELEASE__
+FROM debian:buster
 
 RUN apt update
 RUN apt upgrade -y
