@@ -34,12 +34,12 @@
             "type": "bind"
         },
         {
-            "destination": "/tmp",
-            "name": "tmp",
+            "destination": "/host_etc",
+            "name": "host_etc",
             "options": [
                 "rbind"
             ],
-            "source": "/tmp",
+            "source": "/etc",
             "type": "bind"
         },
         {
