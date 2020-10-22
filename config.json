@@ -6,7 +6,7 @@
     ],
     "workdir": "/app",
     "mounts": [
-        {
+    	{
             "destination": "/run/docker/plugins",
             "name": "run_docker_plugins",
             "options": [
@@ -16,21 +16,39 @@
             "type": "bind"
         },
         {
-            "destination": "/var/run/docker",
-            "name": "var_run_docker",
+            "destination": "/run/docker",
+            "name": "run_docker",
             "options": [
                 "rbind"
             ],
-            "source": "/var/run/docker",
+            "source": "/run/docker",
             "type": "bind"
         },
         {
-            "destination": "/var/run/docker.sock",
-            "name": "var_run_docker_sock",
+            "destination": "/run/docker.sock",
+            "name": "run_docker_sock",
             "options": [
                 "rbind"
             ],
-            "source": "/var/run/docker.sock",
+            "source": "/run/docker.sock",
+            "type": "bind"
+        },
+        {
+            "destination": "/tmp",
+            "name": "tmp",
+            "options": [
+                "rbind"
+            ],
+            "source": "/tmp",
+            "type": "bind"
+        },
+        {
+            "destination": "/host_run",
+            "name": "host_run",
+            "options": [
+                "rbind"
+            ],
+            "source": "/run",
             "type": "bind"
         }
     ],
