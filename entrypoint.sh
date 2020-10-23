@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -x
 
 # Read where the host iptables points
 host_iptables_path=$(readlink /host_sbin/iptables)
@@ -14,8 +14,8 @@ if [ $? == 0 ]; then
 fi
 
 # If the host iptables executable does not contain "nft", switch "legacy" into the container
-echo $host_iptables_path | grep 'nft' &> /dev/null
-if [ $? != 0 ]; then
+echo $host_iptables_path | grep -v 'nft' &> /dev/null
+if [ $? == 0 ]; then
   update-alternatives --set iptables /usr/sbin/iptables-legacy
   update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
 
