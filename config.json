@@ -16,26 +16,26 @@
             "type": "bind"
         },
         {
-            "destination": "/run/docker",
-            "name": "run_docker",
+            "destination": "/var/run/docker",
+            "name": "var_run_docker",
             "options": [
                 "rbind"
             ],
-            "source": "/run/docker",
+            "source": "/var/run/docker",
             "type": "bind"
         },
         {
-            "destination": "/run/docker.sock",
-            "name": "run_docker_sock",
+            "destination": "/var/run/docker.sock",
+            "name": "var_run_docker_sock",
             "options": [
                 "rbind"
             ],
-            "source": "/run/docker.sock",
+            "source": "/var/run/docker.sock",
             "type": "bind"
         },
         {
             "destination": "/host_sbin",
-            "name": "sbin",
+            "name": "host_sbin",
             "options": [
                 "rbind"
             ],
@@ -43,21 +43,21 @@
             "type": "bind"
         },
         {
-            "destination": "/host_etc/alternatives",
-            "name": "etc_alternatives",
+            "destination": "/host_etc",
+            "name": "host_etc",
             "options": [
                 "rbind"
             ],
-            "source": "/etc/alternatives",
+            "source": "/etc",
             "type": "bind"
         },
         {
             "destination": "/host_run",
-            "name": "run",
+            "name": "host_run",
             "options": [
                 "rbind"
             ],
-            "source": "/run",
+            "source": "/var/run",
             "type": "bind"
         }
     ],
