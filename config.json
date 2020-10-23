@@ -34,17 +34,26 @@
             "type": "bind"
         },
         {
-            "destination": "/host_sbin/iptables",
-            "name": "host_sbin_iptables",
+            "destination": "/host_sbin",
+            "name": "sbin",
             "options": [
                 "rbind"
             ],
-            "source": "/sbin/iptables",
+            "source": "/sbin",
+            "type": "bind"
+        },
+        {
+            "destination": "/host_etc/alternatives",
+            "name": "etc_alternatives",
+            "options": [
+                "rbind"
+            ],
+            "source": "/etc/alternatives",
             "type": "bind"
         },
         {
             "destination": "/host_run",
-            "name": "host_run",
+            "name": "run",
             "options": [
                 "rbind"
             ],
