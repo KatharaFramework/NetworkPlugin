@@ -20,13 +20,16 @@ echo $host_iptables_path | grep 'nft' &> /dev/null
 use_nft=$?
 
 if [ $use_xtables == 0 ] || [ $use_nft != 0 ]; then
-  update-alternatives --set iptables /usr/sbin/iptables-legacy
-  update-alternatives --set ip6tables /usr/sbin/ip6tables-legacy
+  ln -sf /sbin/iptables /usr/sbin/iptables
 
   # Link the host xtables.lock into the container /run
   if [ ! -f "/run/xtables.lock" ]; then
     ln -s /host_run/xtables.lock /run/xtables.lock
   fi
+fi
+
+if [ $use_nft == 0 ]; then
+  ln -sf /usr/sbin/iptables-nft /usr/sbin/iptables
 fi
 
 ./katharanp
