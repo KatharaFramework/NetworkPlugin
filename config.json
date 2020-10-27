@@ -34,7 +34,7 @@
             "type": "bind"
         },
         {
-            "destination": "/run/xtables.lock",
+            "destination": "/var/run/xtables.lock",
             "name": "xtables_lock",
             "options": [
                 "rbind"
