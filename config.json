@@ -34,30 +34,15 @@
             "type": "bind"
         },
         {
-            "destination": "/host_sbin",
-            "name": "host_sbin",
+            "destination": "/run/xtables.lock",
+            "name": "xtables_lock",
             "options": [
                 "rbind"
             ],
-            "source": "/sbin",
-            "type": "bind"
-        },
-        {
-            "destination": "/host_etc",
-            "name": "host_etc",
-            "options": [
-                "rbind"
+            "settable": [
+                "source"
             ],
-            "source": "/etc",
-            "type": "bind"
-        },
-        {
-            "destination": "/host_run",
-            "name": "host_run",
-            "options": [
-                "rbind"
-            ],
-            "source": "/var/run",
+            "source": "",
             "type": "bind"
         }
     ],
