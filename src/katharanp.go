@@ -46,6 +46,10 @@ func (k *KatharaNetworkPlugin) CreateNetwork(req *network.CreateNetworkRequest) 
 
 	k.Lock()
 	defer k.Unlock()
+
+	if err := detectIpTables(); err != nil {
+		return err
+	}
 	
 	if _, ok := k.networks[req.NetworkID]; ok {
 		return types.ForbiddenErrorf("network %s exists", req.NetworkID)
@@ -68,6 +72,10 @@ func (k *KatharaNetworkPlugin) CreateNetwork(req *network.CreateNetworkRequest) 
 
 func (k *KatharaNetworkPlugin) DeleteNetwork(req *network.DeleteNetworkRequest) error {
 	log.Printf("Received DeleteNetwork req:\n%+v\n", req)
+
+	if err := detectIpTables(); err != nil {
+		return err
+	}
 
 	err := deleteBridge(req.NetworkID)
 	if err != nil {

@@ -2,11 +2,55 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 
 	"crypto/md5"
 )
+
+var (
+	XTABLES_LOCK_PATH = "/run/xtables.lock"
+	IPTABLES_PATH = "/usr/sbin/iptables"
+	IP6TABLES_PATH = "/usr/sbin/ip6tables"
+	NFT_SUFFIX = "-nft"
+	LEGACY_SUFFIX = "-legacy"
+)
+
+func detectIpTables() error {
+	useNft := false
+
+	stat, err := os.Stat(XTABLES_LOCK_PATH)
+	if err != nil {
+		if os.IsNotExist(err) {
+			useNft = true
+		} else {
+			return err
+		}
+	}
+
+	if stat.IsDir() {
+		useNft = true
+	}
+
+	ipTablesVersion := ""
+	ip6TablesVersion := ""
+	if useNft {
+		ipTablesVersion = IPTABLES_PATH + NFT_SUFFIX
+		ip6TablesVersion = IP6TABLES_PATH + NFT_SUFFIX
+	} else {
+		ipTablesVersion = IPTABLES_PATH + LEGACY_SUFFIX
+		ip6TablesVersion = IP6TABLES_PATH + LEGACY_SUFFIX
+	}
+
+	_, err = exec.Command("update-alternatives", "--set", "iptables", ipTablesVersion).CombinedOutput()
+	if err != nil {
+		return err
+	}
+	_, err = exec.Command("update-alternatives", "--set", "ip6tables", ip6TablesVersion).CombinedOutput()
+	return err
+}
 
 func generateMacAddress(networkID string, endpointID string) string {
 	// Generate the interface MAC Address by concatenating the network id and the endpoint id

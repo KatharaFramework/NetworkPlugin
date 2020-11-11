@@ -1,11 +1,11 @@
-FROM debian:__RELEASE__
+FROM debian:buster
 
 RUN apt update
 RUN apt upgrade -y
 RUN DEBIAN_FRONTEND=noninteractive apt install -y \
     bash \
-    curl \
     iptables
+RUN apt clean
 
 WORKDIR /app
 

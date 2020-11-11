@@ -6,7 +6,7 @@
     ],
     "workdir": "/app",
     "mounts": [
-        {
+    	{
             "destination": "/run/docker/plugins",
             "name": "run_docker_plugins",
             "options": [
@@ -31,6 +31,18 @@
                 "rbind"
             ],
             "source": "/var/run/docker.sock",
+            "type": "bind"
+        },
+        {
+            "destination": "/var/run/xtables.lock",
+            "name": "xtables_lock",
+            "options": [
+                "rbind"
+            ],
+            "settable": [
+                "source"
+            ],
+            "source": "",
             "type": "bind"
         }
     ],
