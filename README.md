@@ -13,4 +13,9 @@ To build the plugin, type on terminal:
 $ make all
 ```
 
+To build the plugin for arm64, specify ARCH variable:
+```
+$ ARCH=arm64 make all
+```
+
 Of course, Golang should be installed (all dependencies are automatically resolved).
