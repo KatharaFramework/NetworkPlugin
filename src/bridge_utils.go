@@ -45,7 +45,8 @@ func createBridge(netID string) (string, error) {
 	}
 
 	var bridgeRule = []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"}
-	if err := iptables.ProgramRule(iptables.Filter, "FORWARD", iptables.Append, bridgeRule); err != nil {
+    var iptable = iptables.GetIptable(iptables.IPv6)
+	if err := iptable.ProgramRule(iptables.Filter, "FORWARD", iptables.Append, bridgeRule); err != nil {
 		return "", err
 	}
 
@@ -100,7 +101,8 @@ func deleteBridge(netID string) error {
 	}
 
 	var bridgeRule = []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"}
-	if err := iptables.ProgramRule(iptables.Filter, "FORWARD", iptables.Delete, bridgeRule); err != nil {
+    var iptable = iptables.GetIptable(iptables.IPv6)
+	if err := iptable.ProgramRule(iptables.Filter, "FORWARD", iptables.Delete, bridgeRule); err != nil {
 		return err
 	}
 
