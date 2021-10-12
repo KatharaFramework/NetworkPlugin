@@ -19,9 +19,12 @@ clean:
 	rm -rf ${PLUGIN_TMP_DIR}
 	rm -rf katharanp
 
-gobuild:
+gobuild:%:
 	go mod download
-	GOOS=linux GOARCH=${ARCH} go build src/katharanp.go src/common_utils.go src/bridge_utils.go src/veth_utils.go
+	GOOS=linux GOARCH=$* go build src/katharanp.go src/common_utils.go src/bridge_utils.go src/veth_utils.go
+
+gobuild_docker_%:
+	docker run -ti --rm -v `pwd`/go-src/:/root/go-src golang /bin/bash -c "cd /root/go-src && make gobuild_$*"
 
 image: 
 	mkdir -p ${PLUGIN_TMP_ROOTFS_DIR}
