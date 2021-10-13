@@ -1,39 +1,46 @@
 #!/usr/bin/make -f
 
 PLUGIN_NAME=kathara/katharanp
-PLUGIN_CONTAINTER=katharanp
-PLUGIN_TMP_DIR=./tmp
-PLUGIN_TMP_ROOTFS_DIR=./tmp/rootfs
+PLUGIN_CONTAINER=katharanp
 
 .PHONY: all test clean gobuild image plugin
 
-all: test clean gobuild plugin
+all_arm64: test clean_arm64 gobuild_docker_arm64 image_arm64 plugin_arm64
+all_push_arm64: all_arm64 push_arm64
+
+all_amd64: test clean_amd64 gobuild_docker_amd64 image_amd64 plugin_amd64
+all_push_amd64: all_amd64 push_amd64
 
 test:
-	cat config.json | python3 -m json.tool
+	cat ./plugin-src/config.json | python3 -m json.tool
 
-clean:
-	docker plugin rm -f ${PLUGIN_NAME} || true
-	docker rm -f ${PLUGIN_CONTAINTER}_rootfs || true
-	rm -rf ${PLUGIN_TMP_DIR}
-	rm -rf katharanp
+clean_%:
+	docker plugin rm -f ${PLUGIN_NAME}:$* || true
+	docker rm -f ${PLUGIN_CONTAINER}_rootfs || true
+	docker buildx rm kat-np-builder || true
+	rm -rf ./img-src/katharanp
+	rm -rf ./go-src/katharanp
+	rm -rf ./plugin-src/rootfs
 
-gobuild:
-	go get -v github.com/docker/libnetwork github.com/vishvananda/netlink github.com/docker/go-plugins-helpers/network github.com/google/uuid
-	go build src/katharanp.go src/common_utils.go src/bridge_utils.go src/veth_utils.go
+gobuild_docker_%:
+	docker run -ti --rm -v `pwd`/go-src/:/root/go-src golang /bin/bash -c "cd /root/go-src && make gobuild_$*"
 
-image: 
-	mkdir -p ${PLUGIN_TMP_ROOTFS_DIR}
-	cp ./Dockerfile ${PLUGIN_TMP_DIR}/Dockerfile
-	cp ./entrypoint.sh ${PLUGIN_TMP_DIR}/entrypoint.sh
-	cp ./katharanp ${PLUGIN_TMP_DIR}/katharanp
-	docker build -t ${PLUGIN_CONTAINTER}:rootfs ${PLUGIN_TMP_DIR}
-	docker create --name ${PLUGIN_CONTAINTER}_rootfs ${PLUGIN_CONTAINTER}:rootfs
-	docker export ${PLUGIN_CONTAINTER}_rootfs | tar -x -C ${PLUGIN_TMP_ROOTFS_DIR}
-	cp config.json ${PLUGIN_TMP_DIR}/config.json
-	docker rm -vf ${PLUGIN_CONTAINTER}_rootfs
-	docker rmi ${PLUGIN_CONTAINTER}:rootfs
-	rm ${PLUGIN_TMP_DIR}/Dockerfile ${PLUGIN_TMP_DIR}/entrypoint.sh ${PLUGIN_TMP_DIR}/katharanp
+image_%: gobuild_docker_% buildx_create_environment
+	mv ./go-src/katharanp ./img-src/
+	docker buildx build --platform linux/$* --load -t ${PLUGIN_CONTAINER}:rootfs ./img-src/
+	docker create --name ${PLUGIN_CONTAINER}_rootfs ${PLUGIN_CONTAINER}:rootfs
+	mkdir -p ./plugin-src/rootfs
+	docker export ${PLUGIN_CONTAINER}_rootfs | tar -x -C ./plugin-src/rootfs
+	docker rm -vf ${PLUGIN_CONTAINER}_rootfs
+	docker rmi ${PLUGIN_CONTAINER}:rootfs
 
-plugin: image
-	docker plugin create ${PLUGIN_NAME} ${PLUGIN_TMP_DIR}
+plugin_%: image
+	docker plugin create ${PLUGIN_NAME}:$* ./plugin-src/
+	rm -rf ./plugin-src/rootfs
+
+push_%: plugin
+	docker plugin push ${PLUGIN_NAME}:$*
+
+buildx_create_environment:
+	docker buildx create --name kat-np-builder --use
+	docker buildx inspect --bootstrap
