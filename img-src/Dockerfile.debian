@@ -1,0 +1,16 @@
+FROM debian:buster
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y \
+        bash \
+        iptables && \
+    apt-get clean
+
+WORKDIR /app
+
+COPY entrypoint.sh entrypoint.sh
+COPY katharanp katharanp
+RUN chmod +x entrypoint.sh katharanp
