@@ -23,7 +23,7 @@ clean_%:
 	rm -rf ./plugin-src/rootfs
 
 gobuild_docker_%:
-	docker run -ti --rm -v `pwd`/go-src/:/root/go-src golang /bin/bash -c "cd /root/go-src && make gobuild_$*"
+	docker run -ti --rm -v `pwd`/go-src/:/root/go-src golang:alpine3.14 /bin/sh -c "apk add -U make && cd /root/go-src && make gobuild_$*"
 
 image_%: gobuild_docker_% buildx_create_environment
 	mv ./go-src/katharanp ./img-src/
