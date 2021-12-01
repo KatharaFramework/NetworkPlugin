@@ -1,7 +1,6 @@
 #!/usr/bin/make -f
-
-PLUGIN_NAME=localhost:5000/kathara/katharanp
 PLUGIN_CONTAINER=katharanp
+PLUGIN_NAME=kathara/$(PLUGIN_CONTAINER)
 PLUGIN_VERSION=latest
 ARCHITECTURES=amd64 386 arm64v8 armv7 armv6 ppc64le s390x
 
