@@ -12,8 +12,8 @@ import (
 
 var (
 	XTABLES_LOCK_PATH = "/run/xtables.lock"
-	IPTABLES_PATH = "/usr/sbin/iptables"
-	IP6TABLES_PATH = "/usr/sbin/ip6tables"
+	IPTABLES_PATH = "/sbin/iptables"
+	IP6TABLES_PATH = "/sbin/ip6tables"
 	NFT_SUFFIX = "-nft"
 	LEGACY_SUFFIX = "-legacy"
 )
