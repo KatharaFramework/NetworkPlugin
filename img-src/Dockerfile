@@ -1,16 +1,14 @@
-FROM debian:buster
+FROM alpine
 
-RUN apt update
-RUN apt upgrade -y
-RUN DEBIAN_FRONTEND=noninteractive apt install -y \
-    bash \
-    iptables
-RUN apt clean
+RUN apk add -U --no-cache \
+    iptables \
+    nftables \
+    dpkg
 
 WORKDIR /app
 
 COPY entrypoint.sh entrypoint.sh
-RUN chmod +x entrypoint.sh
-
 COPY katharanp katharanp
-RUN chmod +x katharanp
+RUN update-alternatives --install /sbin/iptables iptables /sbin/iptables-legacy 1 && \
+    update-alternatives --install /sbin/iptables iptables /sbin/iptables-nft 2 && \
+    chmod +x entrypoint.sh katharanp
