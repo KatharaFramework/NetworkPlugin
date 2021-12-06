@@ -28,7 +28,7 @@ gobuild_docker_%:
 image_%: gobuild_docker_% buildx_create_environment
 	mv ./go-src/katharanp ./img-src/
 	docker buildx build --platform linux/$* --load -t ${PLUGIN_CONTAINER}:rootfs ./img-src/
-	docker create --name ${PLUGIN_CONTAINER}_rootfs ${PLUGIN_CONTAINER}:rootfs
+	docker create --platform linux/$* --name ${PLUGIN_CONTAINER}_rootfs ${PLUGIN_CONTAINER}:rootfs
 	mkdir -p ./plugin-src/rootfs
 	docker export ${PLUGIN_CONTAINER}_rootfs | tar -x -C ./plugin-src/rootfs
 	docker rm -vf ${PLUGIN_CONTAINER}_rootfs
