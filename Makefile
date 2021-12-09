@@ -3,12 +3,12 @@
 PLUGIN_NAME=kathara/katharanp
 PLUGIN_CONTAINER=katharanp
 
-.PHONY: all test clean gobuild image plugin
+.PHONY: buildx_create_environment test all_arm64 all_push_arm64 all_amd64 all_push_amd64
 
-all_arm64: test clean_arm64 gobuild_docker_arm64 image_arm64 plugin_arm64
+all_arm64: test clean_arm64 plugin_arm64
 all_push_arm64: all_arm64 push_arm64
 
-all_amd64: test clean_amd64 gobuild_docker_amd64 image_amd64 plugin_amd64
+all_amd64: test clean_amd64 plugin_amd64
 all_push_amd64: all_amd64 push_amd64
 
 test:
@@ -34,11 +34,11 @@ image_%: gobuild_docker_% buildx_create_environment
 	docker rm -vf ${PLUGIN_CONTAINER}_rootfs
 	docker rmi ${PLUGIN_CONTAINER}:rootfs
 
-plugin_%: image
+plugin_%: image_%
 	docker plugin create ${PLUGIN_NAME}:$* ./plugin-src/
 	rm -rf ./plugin-src/rootfs
 
-push_%: plugin
+push_%: plugin_%
 	docker plugin push ${PLUGIN_NAME}:$*
 
 buildx_create_environment:
