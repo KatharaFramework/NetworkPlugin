@@ -3,7 +3,7 @@
 PLUGIN_NAME=kathara/katharanp
 PLUGIN_CONTAINER=katharanp
 
-.PHONY: buildx_create_environment test all_arm64 all_push_arm64 all_amd64 all_push_amd64
+.PHONY: create-builder delete-builder test all_arm64 all_push_arm64 all_amd64 all_push_amd64
 
 all_arm64: test clean_arm64 plugin_arm64
 all_push_arm64: all_arm64 push_arm64
@@ -14,10 +14,9 @@ all_push_amd64: all_amd64 push_amd64
 test:
 	cat ./plugin-src/config.json | python3 -m json.tool
 
-clean_%:
+clean_%: delete-builder
 	docker plugin rm -f ${PLUGIN_NAME}:$* || true
 	docker rm -f ${PLUGIN_CONTAINER}_rootfs || true
-	docker buildx rm kat-np-builder || true
 	rm -rf ./img-src/katharanp
 	rm -rf ./go-src/katharanp
 	rm -rf ./plugin-src/rootfs
@@ -25,7 +24,7 @@ clean_%:
 gobuild_docker_%:
 	docker run -ti --rm -v `pwd`/go-src/:/root/go-src golang:alpine3.14 /bin/sh -c "apk add -U make && cd /root/go-src && make gobuild_$*"
 
-image_%: gobuild_docker_% buildx_create_environment
+image_%: gobuild_docker_% create-builder
 	mv ./go-src/katharanp ./img-src/
 	docker buildx build --platform linux/$* --load -t ${PLUGIN_CONTAINER}:rootfs ./img-src/
 	docker create --platform linux/$* --name ${PLUGIN_CONTAINER}_rootfs ${PLUGIN_CONTAINER}:rootfs
@@ -38,9 +37,12 @@ plugin_%: image_%
 	docker plugin create ${PLUGIN_NAME}:$* ./plugin-src/
 	rm -rf ./plugin-src/rootfs
 
-push_%: plugin_%
+push_%: clean_% plugin_%
 	docker plugin push ${PLUGIN_NAME}:$*
 
-buildx_create_environment:
+create-builder: delete-builder
 	docker buildx create --name kat-np-builder --use
 	docker buildx inspect --bootstrap
+
+delete-builder:
+	docker buildx rm kat-np-builder || true
