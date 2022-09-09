@@ -73,6 +73,14 @@ func (k *KatharaNetworkPlugin) CreateNetwork(req *network.CreateNetworkRequest) 
 func (k *KatharaNetworkPlugin) DeleteNetwork(req *network.DeleteNetworkRequest) error {
 	log.Printf("Received DeleteNetwork req:\n%+v\n", req)
 
+	k.Lock()
+	defer k.Unlock()
+
+    /* Skip if not in map */
+	if _, ok := k.networks[req.NetworkID]; !ok {
+		return nil
+	}
+
 	if err := detectIpTables(); err != nil {
 		return err
 	}
@@ -81,9 +89,6 @@ func (k *KatharaNetworkPlugin) DeleteNetwork(req *network.DeleteNetworkRequest) 
 	if err != nil {
 		return err
 	}
-
-	k.Lock()
-	defer k.Unlock()
 
 	delete(k.networks, req.NetworkID)
 
@@ -107,6 +112,11 @@ func (k *KatharaNetworkPlugin) CreateEndpoint(req *network.CreateEndpointRequest
 
 	k.Lock()
 	defer k.Unlock()
+
+    /* Throw error if not in map */
+	if _, ok := k.networks[req.NetworkID]; !ok {
+		return nil, types.ForbiddenErrorf("%s network does not exist", req.NetworkID)
+	}
 
 	intfInfo := new(network.EndpointInterface)
 
@@ -135,6 +145,15 @@ func (k *KatharaNetworkPlugin) DeleteEndpoint(req *network.DeleteEndpointRequest
 	k.Lock()
 	defer k.Unlock()
 
+    /* Skip if not in map (both network and endpoint) */
+    if _, netOk := k.networks[req.NetworkID]; !netOk {
+		return nil
+	}
+
+	if _, epOk := k.networks[req.NetworkID].endpoints[req.EndpointID]; !epOk {
+		return nil
+	}
+
 	delete(k.networks[req.NetworkID].endpoints, req.EndpointID)
 
 	return nil
@@ -142,6 +161,18 @@ func (k *KatharaNetworkPlugin) DeleteEndpoint(req *network.DeleteEndpointRequest
 
 func (k *KatharaNetworkPlugin) EndpointInfo(req *network.InfoRequest) (*network.InfoResponse, error) {
 	log.Printf("Received EndpointOperInfo req:\n%+v\n", req)
+
+	k.Lock()
+	defer k.Unlock()
+
+    /* Throw error (both network and endpoint) */
+	if _, netOk := k.networks[req.NetworkID]; !netOk {
+		return nil, types.ForbiddenErrorf("%s network does not exist", req.NetworkID)
+	}
+
+	if _, epOk := k.networks[req.NetworkID].endpoints[req.EndpointID]; !epOk {
+		return nil, types.ForbiddenErrorf("%s endpoint does not exist", req.NetworkID)
+	}
 
 	endpointInfo := k.networks[req.NetworkID].endpoints[req.EndpointID]
 	value := make(map[string]string)
@@ -162,6 +193,15 @@ func (k *KatharaNetworkPlugin) Join(req *network.JoinRequest) (*network.JoinResp
 
 	k.Lock()
 	defer k.Unlock()
+
+    /* Throw error (both network and endpoint) */
+	if _, netOk := k.networks[req.NetworkID]; !netOk {
+		return nil, types.ForbiddenErrorf("%s network does not exist", req.NetworkID)
+	}
+
+	if _, epOk := k.networks[req.NetworkID].endpoints[req.EndpointID]; !epOk {
+		return nil, types.ForbiddenErrorf("%s endpoint does not exist", req.NetworkID)
+	}
 
 	endpointInfo := k.networks[req.NetworkID].endpoints[req.EndpointID]
 	vethInside, vethOutside, err := createVethPair(endpointInfo.macAddress)
@@ -192,6 +232,15 @@ func (k *KatharaNetworkPlugin) Leave(req *network.LeaveRequest) error {
 
 	k.Lock()
 	defer k.Unlock()
+
+    /* Throw error (both network and endpoint) */
+	if _, netOk := k.networks[req.NetworkID]; !netOk {
+		return types.ForbiddenErrorf("%s network does not exist", req.NetworkID)
+	}
+
+	if _, epOk := k.networks[req.NetworkID].endpoints[req.EndpointID]; !epOk {
+		return types.ForbiddenErrorf("%s endpoint does not exist", req.NetworkID)
+	}
 
 	endpointInfo := k.networks[req.NetworkID].endpoints[req.EndpointID]
 
