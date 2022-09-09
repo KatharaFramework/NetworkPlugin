@@ -38,3 +38,25 @@ docker network create --driver=kathara/katharanp:amd64 --ipam-driver=null l2net
 # or
 docker network create --driver=kathara/katharanp:arm64 --ipam-driver=null l2net
 ```
+
+### Troubleshooting in standalone mode
+If the Docker daemon does not start properly while using the plugin with `xtables.lock` mount (e.g., "No such file or directory" error), follow these steps.
+
+Create a dummy `xtables.lock` file: 
+```bash
+touch /var/run/xtables.lock
+```
+
+Start the Docker daemon and immediately disable and remove the `katharanp` plugin:
+```bash
+docker plugin remove -f kathara/katharanp:amd64
+# or
+docker plugin remove -f kathara/katharanp:arm64
+```
+
+Install it without mounting the `xtables.lock` file:
+```bash
+docker plugin install kathara/katharanp:amd64
+# or
+docker plugin install kathara/katharanp:arm64
+```
