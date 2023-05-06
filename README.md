@@ -46,17 +46,17 @@ docker network create --driver=kathara/katharanp:arm64 --ipam-driver=null l2net
 ```bash
 docker network connect --driver-opt kathara.mac_addr=aa:bb:cc:dd:ee:ff l2net container
 ```
-- Compute a deterministic MAC Address using the container name and the interface index, this can be done with the `kathara.machine` and `kathara.iface` driver options:
+- Compute a deterministic MAC Address using the container name and the interface index, this can be done with the `kathara.machine` and `kathara.iface` driver options (they are required together):
 ```bash
 docker network connect --driver-opt kathara.machine=container --driver-opt kathara.iface=1 l2net container
 ```
 
-The formula used to compute the MAC address is the following:
-1- Join the two strings, separating the two values by a dash, e.g., `container-1`
-2- Compute the MD5 of the resulting string: `b588c219865f6fe336908e5991216b13`
-3- Take the first 6 hex bytes of the string, starting from the left: `b588c219865f` -> `b5:88:c2:19:86:5f`
-4- Clean the first byte to obtain a locally administered unicast MAC Address: `0xb5 | 0x02 = 0xb7 & 0xfe = 0xb6`
-5- The resulting MAC Address is: `b6:88:c2:19:86:5f`
+The formula to compute the MAC address is the following:
+1. Join the two strings, separating the two values by a dash, e.g., `container-1`
+2. Compute the MD5 of the resulting string: `b588c219865f6fe336908e5991216b13`
+3. Take the first 6 hex bytes of the string, starting from the left: `b588c219865f` -> `b5:88:c2:19:86:5f`
+4. Clean the first byte to obtain a locally administered unicast MAC Address: `0xb5 | 0x02 = 0xb7 & 0xfe = 0xb6`
+5. The resulting MAC Address is: `b6:88:c2:19:86:5f`
 
 Example output from the container:
 ```bash
