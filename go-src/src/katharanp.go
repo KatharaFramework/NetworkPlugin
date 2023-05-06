@@ -121,9 +121,14 @@ func (k *KatharaNetworkPlugin) CreateEndpoint(req *network.CreateEndpointRequest
 	intfInfo := new(network.EndpointInterface)
 
 	if req.Options["kathara.mac_addr"] != nil {
+		// Use a pre-defined MAC Address passed by the user
 		intfInfo.MacAddress = req.Options["kathara.mac_addr"].(string)
+	} else if (req.Options["kathara.machine"] != nil && req.Options["kathara.iface"] != nil) {
+		// Generate the interface MAC Address by concatenating the machine name and the interface idx	
+		intfInfo.MacAddress = generateMacAddressFromID(req.Options["kathara.machine"].(string) + "-" + req.Options["kathara.iface"].(string))
 	} else if req.Interface == nil {
-		intfInfo.MacAddress = generateMacAddress(req.NetworkID, req.EndpointID)
+		// Generate the interface MAC Address by concatenating the network id and the endpoint id
+		intfInfo.MacAddress = generateMacAddressFromID(req.NetworkID + "-" + req.EndpointID)
 	}
 
 	parsedMac, _ := net.ParseMAC(intfInfo.MacAddress)

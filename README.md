@@ -39,6 +39,36 @@ docker network create --driver=kathara/katharanp:amd64 --ipam-driver=null l2net
 docker network create --driver=kathara/katharanp:arm64 --ipam-driver=null l2net
 ```
 
+### Assign MAC Addresses to network interfaces
+
+`katharanp` supports two different ways to assign a MAC Address to a network interface:
+- Pass a specific MAC Address, this can be achieved by leveraging the `kathara.mac_addr` driver option while connecting a container to a network:
+```bash
+docker network connect --driver-opt kathara.mac_addr=aa:bb:cc:dd:ee:ff l2net container
+```
+- Compute a deterministic MAC Address using the container name and the interface index, this can be done with the `kathara.machine` and `kathara.iface` driver options:
+```bash
+docker network connect --driver-opt kathara.machine=container --driver-opt kathara.iface=1 l2net container
+```
+
+The formula used to compute the MAC address is the following:
+1- Join the two strings, separating the two values by a dash, e.g., `container-1`
+2- Compute the MD5 of the resulting string: `b588c219865f6fe336908e5991216b13`
+3- Take the first 6 hex bytes of the string, starting from the left: `b588c219865f` -> `b5:88:c2:19:86:5f`
+4- Clean the first byte to obtain a locally administered unicast MAC Address: `0xb5 | 0x02 = 0xb7 & 0xfe = 0xb6`
+5- The resulting MAC Address is: `b6:88:c2:19:86:5f`
+
+Example output from the container:
+```bash
+root@584e403aec5a:/# ifconfig eth1
+eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        ether b6:88:c2:19:86:5f  txqueuelen 1000  (Ethernet)
+        RX packets 8  bytes 736 (736.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+```
+
 ### Troubleshooting in standalone mode
 If the Docker daemon does not start properly while using the plugin with `xtables.lock` mount (e.g., "No such file or directory" error), follow these steps.
 
