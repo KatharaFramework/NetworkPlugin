@@ -120,8 +120,9 @@ func (k *KatharaNetworkPlugin) CreateEndpoint(req *network.CreateEndpointRequest
 
 	intfInfo := new(network.EndpointInterface)
 
-	if req.Options["org.kathara.katharanp.mac"] != nil {
+	if req.Options["kathara.mac_addr"] != nil {
 		intfInfo.MacAddress = req.Options["org.kathara.katharanp.mac"].(string)
+		intfInfo.MacAddress = req.Options["kathara.mac_addr"].(string)
 	} else if req.Interface == nil {
 		intfInfo.MacAddress = generateMacAddress(req.NetworkID, req.EndpointID)
 	}
