@@ -1,4 +1,4 @@
-# Katharà Network Plugin
+# Kathará Network Plugin
 
 This repository contains the Golang source code for the `kathara/katharanp` Docker Network Plugin.
 
@@ -19,7 +19,7 @@ Where `<arch>` can be: `amd64` or `arm64`.
 
 The build process leverages on Docker, so you don't need any dependencies installed in your machine.
 
-## Use `katharanp` without Katharà
+## Use `katharanp` without Kathará
 
 It is possible to leverage on `katharanp` as a standalone Docker Network Plugin, in order to create pure L2 networks.
 
