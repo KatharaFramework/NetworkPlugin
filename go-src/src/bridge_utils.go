@@ -45,8 +45,16 @@ func createBridge(netID string) (string, error) {
 	}
 
 	var bridgeRule = []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"}
-    var iptable = iptables.GetIptable(iptables.IPv4)
-	if err := iptable.ProgramRule(iptables.Filter, "FORWARD", iptables.Append, bridgeRule); err != nil {
+
+    // Install rule in IPv4
+	var iptablev4 = iptables.GetIptable(iptables.IPv4)
+	if err := iptablev4.ProgramRule(iptables.Filter, "FORWARD", iptables.Append, bridgeRule); err != nil {
+		return "", err
+	}
+
+	// Install rule in IPv6
+	var iptablev6 = iptables.GetIptable(iptables.IPv6)
+	if err := iptablev6.ProgramRule(iptables.Filter, "FORWARD", iptables.Append, bridgeRule); err != nil {
 		return "", err
 	}
 
@@ -101,8 +109,16 @@ func deleteBridge(netID string) error {
 	}
 
 	var bridgeRule = []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"}
-    var iptable = iptables.GetIptable(iptables.IPv4)
-	if err := iptable.ProgramRule(iptables.Filter, "FORWARD", iptables.Delete, bridgeRule); err != nil {
+
+	// Delete rule in IPv4
+	var iptablev4 = iptables.GetIptable(iptables.IPv4)
+	if err := iptablev4.ProgramRule(iptables.Filter, "FORWARD", iptables.Delete, bridgeRule); err != nil {
+		return err
+	}
+
+	// Delete rule in IPv6
+	var iptablev6 = iptables.GetIptable(iptables.IPv6)
+	if err := iptablev6.ProgramRule(iptables.Filter, "FORWARD", iptables.Delete, bridgeRule); err != nil {
 		return err
 	}
 

@@ -52,10 +52,7 @@ func detectIpTables() error {
 	return err
 }
 
-func generateMacAddress(networkID string, endpointID string) string {
-	// Generate the interface MAC Address by concatenating the network id and the endpoint id
-	macAddressID := networkID + endpointID
-
+func generateMacAddressFromID(macAddressID string) string {
 	// Generate an hash from the previous string and truncate it to 6 bytes (48 bits = MAC Length)
 	hasher := md5.New()
 	hasher.Write([]byte(macAddressID))

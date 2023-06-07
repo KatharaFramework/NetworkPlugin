@@ -50,7 +50,7 @@ func (k *KatharaNetworkPlugin) CreateNetwork(req *network.CreateNetworkRequest) 
 	if err := detectIpTables(); err != nil {
 		return err
 	}
-	
+
 	if _, ok := k.networks[req.NetworkID]; ok {
 		return types.ForbiddenErrorf("network %s exists", req.NetworkID)
 	}
@@ -76,7 +76,7 @@ func (k *KatharaNetworkPlugin) DeleteNetwork(req *network.DeleteNetworkRequest) 
 	k.Lock()
 	defer k.Unlock()
 
-    /* Skip if not in map */
+	/* Skip if not in map */
 	if _, ok := k.networks[req.NetworkID]; !ok {
 		return nil
 	}
@@ -113,15 +113,22 @@ func (k *KatharaNetworkPlugin) CreateEndpoint(req *network.CreateEndpointRequest
 	k.Lock()
 	defer k.Unlock()
 
-    /* Throw error if not in map */
+	/* Throw error if not in map */
 	if _, ok := k.networks[req.NetworkID]; !ok {
 		return nil, types.ForbiddenErrorf("%s network does not exist", req.NetworkID)
 	}
 
 	intfInfo := new(network.EndpointInterface)
 
-	if req.Interface == nil {
-		intfInfo.MacAddress = generateMacAddress(req.NetworkID, req.EndpointID)
+	if req.Options["kathara.mac_addr"] != nil {
+		// Use a pre-defined MAC Address passed by the user
+		intfInfo.MacAddress = req.Options["kathara.mac_addr"].(string)
+	} else if (req.Options["kathara.machine"] != nil && req.Options["kathara.iface"] != nil) {
+		// Generate the interface MAC Address by concatenating the machine name and the interface idx	
+		intfInfo.MacAddress = generateMacAddressFromID(req.Options["kathara.machine"].(string) + "-" + req.Options["kathara.iface"].(string))
+	} else if req.Interface == nil {
+		// Generate the interface MAC Address by concatenating the network id and the endpoint id
+		intfInfo.MacAddress = generateMacAddressFromID(req.NetworkID + "-" + req.EndpointID)
 	}
 
 	parsedMac, _ := net.ParseMAC(intfInfo.MacAddress)
@@ -145,8 +152,8 @@ func (k *KatharaNetworkPlugin) DeleteEndpoint(req *network.DeleteEndpointRequest
 	k.Lock()
 	defer k.Unlock()
 
-    /* Skip if not in map (both network and endpoint) */
-    if _, netOk := k.networks[req.NetworkID]; !netOk {
+	/* Skip if not in map (both network and endpoint) */
+	if _, netOk := k.networks[req.NetworkID]; !netOk {
 		return nil
 	}
 
@@ -165,7 +172,7 @@ func (k *KatharaNetworkPlugin) EndpointInfo(req *network.InfoRequest) (*network.
 	k.Lock()
 	defer k.Unlock()
 
-    /* Throw error (both network and endpoint) */
+	/* Throw error (both network and endpoint) */
 	if _, netOk := k.networks[req.NetworkID]; !netOk {
 		return nil, types.ForbiddenErrorf("%s network does not exist", req.NetworkID)
 	}
@@ -184,7 +191,7 @@ func (k *KatharaNetworkPlugin) EndpointInfo(req *network.InfoRequest) (*network.
 	resp := &network.InfoResponse{
 		Value: value,
 	}
-	
+
 	return resp, nil
 }
 
@@ -194,7 +201,7 @@ func (k *KatharaNetworkPlugin) Join(req *network.JoinRequest) (*network.JoinResp
 	k.Lock()
 	defer k.Unlock()
 
-    /* Throw error (both network and endpoint) */
+	/* Throw error (both network and endpoint) */
 	if _, netOk := k.networks[req.NetworkID]; !netOk {
 		return nil, types.ForbiddenErrorf("%s network does not exist", req.NetworkID)
 	}
@@ -233,7 +240,7 @@ func (k *KatharaNetworkPlugin) Leave(req *network.LeaveRequest) error {
 	k.Lock()
 	defer k.Unlock()
 
-    /* Throw error (both network and endpoint) */
+	/* Throw error (both network and endpoint) */
 	if _, netOk := k.networks[req.NetworkID]; !netOk {
 		return types.ForbiddenErrorf("%s network does not exist", req.NetworkID)
 	}
