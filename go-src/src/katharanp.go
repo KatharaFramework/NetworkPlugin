@@ -7,6 +7,7 @@ import (
 
 	"github.com/docker/go-plugins-helpers/network"
 	"github.com/docker/libnetwork/types"
+	"github.com/KatharaFramework/NetworkPluginLib"
 )
 
 var (
@@ -16,12 +17,12 @@ var (
 
 type katharaEndpoint struct {
 	macAddress  net.HardwareAddr
-	vethInside  string
-	vethOutside string
+	tapIface  string
+	vdeThread uintptr
 }
 
 type katharaNetwork struct {
-	bridgeName string
+	switchName string
 	endpoints  map[string]*katharaEndpoint
 }
 
@@ -47,21 +48,17 @@ func (k *KatharaNetworkPlugin) CreateNetwork(req *network.CreateNetworkRequest) 
 	k.Lock()
 	defer k.Unlock()
 
-	if err := detectIpTables(); err != nil {
-		return err
-	}
-
 	if _, ok := k.networks[req.NetworkID]; ok {
 		return types.ForbiddenErrorf("network %s exists", req.NetworkID)
 	}
 
-	bridgeName, err := createBridge(req.NetworkID)
+	switchName, err := katnplib.CreateSwitch(req.NetworkID)
 	if err != nil {
 		return err
 	}
 
 	katharaNetwork := &katharaNetwork{
-		bridgeName: bridgeName,
+		switchName: switchName,
 		endpoints:  make(map[string]*katharaEndpoint),
 	}
 
@@ -81,11 +78,7 @@ func (k *KatharaNetworkPlugin) DeleteNetwork(req *network.DeleteNetworkRequest) 
 		return nil
 	}
 
-	if err := detectIpTables(); err != nil {
-		return err
-	}
-
-	err := deleteBridge(req.NetworkID)
+	err := katnplib.DeleteSwitch(req.NetworkID)
 	if err != nil {
 		return err
 	}
@@ -125,10 +118,10 @@ func (k *KatharaNetworkPlugin) CreateEndpoint(req *network.CreateEndpointRequest
 		intfInfo.MacAddress = req.Options["kathara.mac_addr"].(string)
 	} else if (req.Options["kathara.machine"] != nil && req.Options["kathara.iface"] != nil) {
 		// Generate the interface MAC Address by concatenating the machine name and the interface idx	
-		intfInfo.MacAddress = generateMacAddressFromID(req.Options["kathara.machine"].(string) + "-" + req.Options["kathara.iface"].(string))
+		intfInfo.MacAddress = katnplib.GenerateMacAddressFromID(req.Options["kathara.machine"].(string) + "-" + req.Options["kathara.iface"].(string))
 	} else if req.Interface == nil {
 		// Generate the interface MAC Address by concatenating the network id and the endpoint id
-		intfInfo.MacAddress = generateMacAddressFromID(req.NetworkID + "-" + req.EndpointID)
+		intfInfo.MacAddress = katnplib.GenerateMacAddressFromID(req.NetworkID + "-" + req.EndpointID)
 	}
 
 	parsedMac, _ := net.ParseMAC(intfInfo.MacAddress)
@@ -186,7 +179,6 @@ func (k *KatharaNetworkPlugin) EndpointInfo(req *network.InfoRequest) (*network.
 
 	value["ip_address"] = ""
 	value["mac_address"] = endpointInfo.macAddress.String()
-	value["veth_outside"] = endpointInfo.vethOutside
 
 	resp := &network.InfoResponse{
 		Value: value,
@@ -211,21 +203,22 @@ func (k *KatharaNetworkPlugin) Join(req *network.JoinRequest) (*network.JoinResp
 	}
 
 	endpointInfo := k.networks[req.NetworkID].endpoints[req.EndpointID]
-	vethInside, vethOutside, err := createVethPair(endpointInfo.macAddress)
+	tapIface, err := katnplib.CreateTap(endpointInfo.macAddress)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := attachInterfaceToBridge(k.networks[req.NetworkID].bridgeName, vethOutside); err != nil {
+	vdeThread, err := katnplib.JoinSwitch(k.networks[req.NetworkID].switchName, tapIface)
+	if err != nil {
 		return nil, err
 	}
 
-	k.networks[req.NetworkID].endpoints[req.EndpointID].vethInside = vethInside
-	k.networks[req.NetworkID].endpoints[req.EndpointID].vethOutside = vethOutside
+	k.networks[req.NetworkID].endpoints[req.EndpointID].tapIface = tapIface
+	k.networks[req.NetworkID].endpoints[req.EndpointID].vdeThread = vdeThread
 
 	resp := &network.JoinResponse{
 		InterfaceName: network.InterfaceName{
-			SrcName:   vethInside,
+			SrcName:   tapIface,
 			DstPrefix: "eth",
 		},
 		DisableGatewayService: true,
@@ -251,7 +244,8 @@ func (k *KatharaNetworkPlugin) Leave(req *network.LeaveRequest) error {
 
 	endpointInfo := k.networks[req.NetworkID].endpoints[req.EndpointID]
 
-	if err := deleteVethPair(endpointInfo.vethOutside); err != nil {
+	katnplib.LeaveSwitch(endpointInfo.vdeThread)
+	if err := katnplib.DeleteTap(endpointInfo.tapIface); err != nil {
 		return err
 	}
 

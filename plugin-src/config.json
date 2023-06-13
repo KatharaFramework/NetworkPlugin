@@ -1,65 +1,55 @@
 {
     "description": "Kathara Network Plugin",
     "documentation": "https://docs.docker.com/engine/extend/config/",
-    "entrypoint": [
-        "./entrypoint.sh"
-    ],
+    "entrypoint": ["./entrypoint.sh"],
     "workdir": "/app",
     "mounts": [
     	{
             "destination": "/run/docker/plugins",
             "name": "run_docker_plugins",
-            "options": [
-                "rbind"
-            ],
+            "options": ["rbind"],
             "source": "/run/docker/plugins",
             "type": "bind"
         },
         {
             "destination": "/var/run/docker",
             "name": "var_run_docker",
-            "options": [
-                "rbind"
-            ],
+            "options": ["rbind"],
             "source": "/var/run/docker",
             "type": "bind"
         },
         {
             "destination": "/var/run/docker.sock",
             "name": "var_run_docker_sock",
-            "options": [
-                "rbind"
-            ],
+            "options": ["rbind"],
             "source": "/var/run/docker.sock",
             "type": "bind"
         },
         {
-            "destination": "/var/run/xtables.lock",
-            "name": "xtables_lock",
-            "options": [
-                "rbind"
-            ],
-            "settable": [
-                "source"
-            ],
-            "source": "",
+            "destination": "/hostopt",
+            "name": "opt",
+            "options": ["rw", "rbind"],
+            "source": "/opt",
             "type": "bind"
         }
     ],
     "interface": {
         "socket": "/katharanp.sock",
-        "types": [
-            "docker.networkdriver/1.0"
-        ]
+        "types": ["docker.networkdriver/1.0"]
     },
     "linux": {
-        "capabilities": [
-            "CAP_SYS_ADMIN",
-            "CAP_NET_ADMIN",
-            "CAP_NET_RAW"
+        "capabilities": ["CAP_SYS_ADMIN", "CAP_NET_ADMIN", "CAP_NET_RAW"],
+        "devices": [
+            {
+                "path": "/dev/net/tun",
+                "type": "c",
+                "major": 10,
+                "minor": 200
+            }
         ]
     },
     "network": {
         "type": "host"
-    }
+    },
+    "pidhost": true
 }

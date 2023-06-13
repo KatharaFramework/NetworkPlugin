@@ -18,14 +18,14 @@ clean_%: delete-builder
 	docker plugin rm -f ${PLUGIN_NAME}:$* || true
 	docker rm -f ${PLUGIN_CONTAINER}_rootfs || true
 	rm -rf ./img-src/katharanp
-	rm -rf ./go-src/katharanp
+	rm -rf ./go-src/src/katharanp
 	rm -rf ./plugin-src/rootfs
 
 gobuild_docker_%:
-	docker run -ti --rm -v `pwd`/go-src/:/root/go-src golang:alpine3.14 /bin/sh -c "apk add -U make && cd /root/go-src && make gobuild_$*"
+	docker run -ti --rm -v `pwd`/go-src/:/root/go-src golang:alpine3.18 /bin/sh -c "apk add -U make && cd /root/go-src && make gobuild_$*"
 
 image_%: gobuild_docker_% create-builder
-	mv ./go-src/katharanp ./img-src/
+	mv ./go-src/src/katharanp ./img-src/
 	docker buildx build --platform linux/$* --load -t ${PLUGIN_CONTAINER}:rootfs ./img-src/
 	docker create --platform linux/$* --name ${PLUGIN_CONTAINER}_rootfs ${PLUGIN_CONTAINER}:rootfs
 	mkdir -p ./plugin-src/rootfs
