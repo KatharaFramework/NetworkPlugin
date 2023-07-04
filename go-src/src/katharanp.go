@@ -18,7 +18,9 @@ var (
 type katharaEndpoint struct {
 	macAddress  net.HardwareAddr
 	tapIface  string
+	tapIfaceIdx int
 	vdeThread uintptr
+	ns string
 }
 
 type katharaNetwork struct {
@@ -203,7 +205,7 @@ func (k *KatharaNetworkPlugin) Join(req *network.JoinRequest) (*network.JoinResp
 	}
 
 	endpointInfo := k.networks[req.NetworkID].endpoints[req.EndpointID]
-	tapIface, err := katnplib.CreateTap(endpointInfo.macAddress)
+	tapIface, tapIfaceIdx, err := katnplib.CreateTap(endpointInfo.macAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -214,7 +216,9 @@ func (k *KatharaNetworkPlugin) Join(req *network.JoinRequest) (*network.JoinResp
 	}
 
 	k.networks[req.NetworkID].endpoints[req.EndpointID].tapIface = tapIface
+	k.networks[req.NetworkID].endpoints[req.EndpointID].tapIfaceIdx = tapIfaceIdx
 	k.networks[req.NetworkID].endpoints[req.EndpointID].vdeThread = vdeThread
+	k.networks[req.NetworkID].endpoints[req.EndpointID].ns = req.SandboxKey
 
 	resp := &network.JoinResponse{
 		InterfaceName: network.InterfaceName{
@@ -245,7 +249,7 @@ func (k *KatharaNetworkPlugin) Leave(req *network.LeaveRequest) error {
 	endpointInfo := k.networks[req.NetworkID].endpoints[req.EndpointID]
 
 	katnplib.LeaveSwitch(endpointInfo.vdeThread)
-	if err := katnplib.DeleteTap(endpointInfo.tapIface); err != nil {
+	if err := katnplib.DeleteTap(endpointInfo.tapIface, endpointInfo.tapIfaceIdx, endpointInfo.ns); err != nil {
 		return err
 	}
 

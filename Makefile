@@ -5,11 +5,11 @@ PLUGIN_CONTAINER=katharanp
 
 .PHONY: create-builder delete-builder test all_arm64 all_push_arm64 all_amd64 all_push_amd64
 
-all_arm64: test clean_arm64 plugin_arm64
-all_push_arm64: all_arm64 push_arm64
+all_arm64: test clean_arm64 plugin_arm64 delete-builder
+all_push_arm64: all_arm64 push_arm64 delete-builder
 
-all_amd64: test clean_amd64 plugin_amd64
-all_push_amd64: all_amd64 push_amd64
+all_amd64: test clean_amd64 plugin_amd64 delete-builder
+all_push_amd64: all_amd64 push_amd64 delete-builder
 
 test:
 	cat ./plugin-src/config.json | python3 -m json.tool

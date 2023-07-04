@@ -25,7 +25,7 @@ func GenerateMacAddressFromID(macAddressID string) string {
 	// Steps to obtain a locally administered unicast MAC
 	// See http://www.noah.org/wiki/MAC_address
 	firstByteInt, _ := strconv.ParseInt(macAddressString[0], 16, 32)
-	macAddressString[0] = fmt.Sprintf("%02x", (firstByteInt|0x02)&0xfe)
+	macAddressString[0] = fmt.Sprintf("%02x", (firstByteInt | 0x02) & 0xfe)
 
 	return strings.Join(macAddressString, ":")
 }
