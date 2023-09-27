@@ -3,6 +3,6 @@
 set -x
 set -e
 
-mkdir -p /hostopt/katharanp
+mkdir -p /hosttmp/katharanp
 
 ./katharanp

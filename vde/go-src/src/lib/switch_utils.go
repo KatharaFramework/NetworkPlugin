@@ -15,7 +15,7 @@ const (
 	switchPrefix    	= "kt"
 	switchLen   		= 12
 	switchNumIfaces		= 65535
-	pluginPath			= "/hostopt/katharanp/"
+	pluginPath			= "/hosttmp/katharanp/"
 )
 
 func getSwitchName(netID string) string {

@@ -55,4 +55,5 @@ WORKDIR /app
 
 COPY entrypoint.sh entrypoint.sh
 COPY katharanp katharanp
-RUN chmod +x entrypoint.sh katharanp
+COPY vde_ext /usr/local/bin/vde_ext
+RUN chmod +x entrypoint.sh katharanp /usr/local/bin/vde_ext
