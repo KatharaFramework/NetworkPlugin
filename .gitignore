@@ -2,3 +2,5 @@
 katharanp
 vde_ext
 tmp
+.DS_Store
+*.o
