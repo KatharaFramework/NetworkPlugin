@@ -1,5 +1,5 @@
 {
-    "description": "Kathara Network Plugin",
+    "description": "Kathara Network Plugin (Linux Bridges)",
     "documentation": "https://docs.docker.com/engine/extend/config/",
     "entrypoint": [
         "./entrypoint.sh"
