@@ -6,11 +6,11 @@
     <img src="/images/bridge-no-ext.PNG" alt="Kathara Network Plugin (Linux Bridges)" width="450" />
 </p>
 
-A new Linux bridge is created for each required LAN. When a container is added to this network, a veth pair is created, with one endpoint linked to the bridge and the other end moved into the container's network namespace. Some additional `iptables` rules are applied in order to forward packets from the switch (that would be otherwise dropped by Docker isolation policies).
+When Docker creates networks using the plugin, a new Linux bridge is created for each required LAN. When a container is added to this network, a veth pair is created, with one endpoint linked to the bridge and the other end moved into the container's network namespace. Some additional `iptables` rules are applied in order to forward packets from the switch (that would be otherwise dropped by Docker isolation policies).
 
 ## Advantages
 - Provides better performance (since Linux bridges are managed in the kernel);
-- You can directly `tcpdump` traffic from the bridge (which in some use cases is required).
+- You can directly sniff traffic from the bridge using `tcpdump` (which in some use cases is required).
 
 ## Disadvantages
 - Linux bridges do not forward arbitrary L2 multicast frames (e.g., STP);
@@ -41,7 +41,7 @@ To avoid assigning any IP subnet you **MUST** use `--ipam-driver=null` when crea
 </p>
 
 It is possible to attach one or more host interfaces to a L2 LAN. Interfaces can either be physical interfaces or VLAN interfaces.
-To do so, the interface should be attached to the corresponding Linux bridge (setting the `master` interface). In Kathará, this operation can be automatically performed using the `lab.ext` file, but it also possible to manually perform it.
+To do so, the interface should be attached to the corresponding Linux bridge (setting the `master` interface). In Kathará, this operation can be automatically performed using the [`lab.ext`](https://www.kathara.org/man-pages/kathara-lab.ext.5.html) file, but it also possible to manually perform it.
 
 First, search the name of the Linux bridge associated to the network (in this example `l2net`):
 ```bash
