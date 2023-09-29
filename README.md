@@ -6,8 +6,6 @@ The plugin has two different versions, which are divided in the two main folders
 - `bridge`: legacy, creates pure L2 LANs using Linux bridges and veth pairs (which is built using the `kathara/katharanp` tag).
 - `vde`: creates pure L2 LANs using VDE (Virtual Distributed Ethernet) software switches and tap interfaces (which is built using the `kathara/katharanp_vde` tag).
 
-To avoid assigning any IP subnet you **MUST** use `--ipam-driver=null` when creating networks with Docker plugin. Otherwise, the endpoint inside the container will always receive an IP address from the default pool.
-
 ## Build from the source
 
 The plugin is compiled and released for both `amd64` and `arm64` architectures. The tag of the plugin identifies the architecture. For backward compatibility, the `latest` tag is a retag of the `amd64` version.
@@ -28,24 +26,7 @@ The build process leverages on Docker, so you don't need any dependencies instal
 
 ## Use `katharanp` without Kathará
 
-It is possible to leverage on `katharanp` as a standalone Docker Network Plugin, in order to create pure L2 networks.
-
-### Note for the `bridge` version
-If you are using the legacy `bridge` version, using nftables as the iptables backend requires a `xtables.lock` file in order to work properly. Hence the same host lock should be shared (and hence, mounted) with the network plugin container. 
-
-So, install the plugin passing the path of your `xtables.lock` file to the plugin configuration, with the following command:
-```bash
-docker plugin install kathara/katharanp:amd64 xtables_lock.source="/var/run/xtables.lock"
-# or
-docker plugin install kathara/katharanp:arm64 xtables_lock.source="/var/run/xtables.lock"
-```
-
-At this point, you can create a network using the standard Docker command:
-```bash
-docker network create --driver=kathara/katharanp:amd64 --ipam-driver=null l2net
-# or
-docker network create --driver=kathara/katharanp:arm64 --ipam-driver=null l2net
-```
+It is possible to leverage on `katharanp` as a standalone Docker Network Plugin, in order to create pure L2 networks. Please check the README of each version (inside the corresponding folder) for specific information.
 
 ### Assign MAC Addresses to network interfaces
 
@@ -75,26 +56,4 @@ eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
         RX errors 0  dropped 0  overruns 0  frame 0
         TX packets 0  bytes 0 (0.0 B)
         TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
-```
-
-### Troubleshooting in standalone mode (`bridge` version)
-If the Docker daemon does not start properly while using the plugin with `xtables.lock` mount (e.g., "No such file or directory" error), follow these steps.
-
-Create a dummy `xtables.lock` file: 
-```bash
-touch /var/run/xtables.lock
-```
-
-Start the Docker daemon and immediately disable and remove the `katharanp` plugin:
-```bash
-docker plugin remove -f kathara/katharanp:amd64
-# or
-docker plugin remove -f kathara/katharanp:arm64
-```
-
-Install it without mounting the `xtables.lock` file:
-```bash
-docker plugin install kathara/katharanp:amd64
-# or
-docker plugin install kathara/katharanp:arm64
 ```
