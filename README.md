@@ -4,7 +4,7 @@ This repository contains the source code for the Docker Network Plugin.
 
 The plugin has two different versions, which are divided in the two main folders:
 - [`bridge`](/bridge/) (legacy): creates pure L2 LANs using Linux bridges and veth pairs (which is built using the `kathara/katharanp` tag).
-- `vde`: creates pure L2 LANs using VDE (Virtual Distributed Ethernet) software switches and tap interfaces (which is built using the `kathara/katharanp_vde` tag).
+- [`vde`](/vde/): creates pure L2 LANs using VDE (Virtual Distributed Ethernet) software switches and tap interfaces (which is built using the `kathara/katharanp_vde` tag).
 
 ## Build from source
 
