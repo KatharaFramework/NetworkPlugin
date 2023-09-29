@@ -17,7 +17,9 @@ $ make all_<arch>
 
 Where `<arch>` can be: `amd64` or `arm64`.
 
-You can also build only a specific version of the plugin by entering its directory:
+**NOTE**: since the `vde` version relies on C code, you can only build the Docker plugin for your target architecture! 
+
+You can also build only a specific version of the plugin by entering its directory, for example:
 ```
 $ cd vde && make all_<arch>
 ```
