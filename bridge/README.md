@@ -1,6 +1,11 @@
 # Kathara Network Plugin (Linux bridges + veth pairs)
 
 ## How does it work?
+
+<p align="center">
+    <img src="/images/bridge-no-ext.PNG" alt="Kathara Network Plugin (Linux Bridges)" width="450" />
+</p>
+
 A new Linux bridge is created for each required LAN. When a container is added to this network, a veth pair is created, with one endpoint linked to the bridge and the other end moved into the container's network namespace. Some additional `iptables` rules are applied in order to forward packets from the switch (that would be otherwise dropped by Docker isolation policies).
 
 ## Advantages
@@ -30,6 +35,10 @@ To avoid assigning any IP subnet you **MUST** use `--ipam-driver=null` when crea
 
 ### Attach Physical Interfaces and VLANs
 **NOTE**: This feature is ONLY available for Linux-based operating systems.
+
+<p align="center">
+    <img src="/images/bridge-ext.PNG" alt="Kathara Network Plugin with Physical Interfaces (Linux Bridges)" width="450" />
+</p>
 
 It is possible to attach one or more host interfaces to a L2 LAN. Interfaces can either be physical interfaces or VLAN interfaces.
 To do so, the interface should be attached to the corresponding Linux bridge (setting the `master` interface). In Kathará, this operation can be automatically performed using the `lab.ext` file, but it also possible to manually perform it.
