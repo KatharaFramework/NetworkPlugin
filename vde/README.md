@@ -1,4 +1,4 @@
-# Kathara Network Plugin (VDE Software Switches + tap interfaces)
+# Kathara Network Plugin (VDE Switches + tap interfaces)
 
 ## How does it work?
 
@@ -6,17 +6,17 @@
     <img src="/images/vde-no-ext.PNG" alt="Kathara Network Plugin (VDE Switches)" width="450" />
 </p>
 
-A new VDE switch process is created for each required LAN. When a container is added to this network, a tap interface is created and moved into the container's network namespace.
+When Docker creates networks using the plugin, a new VDE switch process is created for each required LAN. When a container is added to this network, a tap interface is created and moved into the container's network namespace.
 
 ## Advantages
 - Forwards arbitrary L2 multicast frames (e.g., STP);
 - Behaves like a hub, each container on the LAN receives all the L2 frames;
-- Does not generate undesired noise (e.g., IPv6 router solicitations);
+- Does not generate undesired noise (e.g., [IPv6 router solicitations](https://github.com/KatharaFramework/NetworkPlugin/issues/4));
 - You can use any L3 network, even the Docker default network.
 
 ## Disadvantages
 - VDE switches are less performant than Linux bridges (they are managed in userspace);
-- You cannot directly `tcpdump` traffic from the bridge. The solution is to attach an [additional `sniffer` container](https://github.com/KatharaFramework/Kathara-Labs/tree/main/tutorials/capture-packets).
+- You cannot directly `tcpdump` traffic from the bridge. The solution is to sniff traffic directly from a container interface. 
 
 ## `kathara/katharanp_vde` Standalone Mode
 
@@ -39,7 +39,7 @@ To avoid assigning any IP subnet you **MUST** use `--ipam-driver=null` when crea
 </p>
 
 It is possible to attach one or more host interfaces to a L2 LAN. Interfaces can either be physical interfaces or VLAN interfaces.
-To do so, the interface should be attached to the corresponding VDE switch. The procedure is a bit more complex than the Linux bridge version, since it relies on a custom `vde_ext` util to perform the connection (installed inside the plugin container). In Kathará, this operation is automatically performed using the `lab.ext` file, but it also possible to manually perform it.
+To do so, the interface should be attached to the corresponding VDE switch. The procedure is a bit more complex than the Linux bridge version, since it relies on a custom `vde_ext` util to perform the connection (installed inside the plugin container). In Kathará, this operation is automatically performed using the [`lab.ext`](https://www.kathara.org/man-pages/kathara-lab.ext.5.html) file, but it also possible to manually perform it.
 
 First, search the name of the switch associated to the network (in this example `l2net`):
 ```bash
