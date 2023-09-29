@@ -1,6 +1,6 @@
 # Kathará Network Plugin
 
-This repository contains the source code for the Docker Network Plugin.
+This repository contains the source code for the Docker Network Plugin used by Kathará.
 
 The plugin has two different versions, which are divided in the two main folders:
 - [`vde`](/vde/): creates pure L2 LANs using VDE (Virtual Distributed Ethernet) software switches and tap interfaces (which is built using the `kathara/katharanp_vde` tag).
@@ -8,7 +8,7 @@ The plugin has two different versions, which are divided in the two main folders
 
 ## Build from source
 
-The plugin is compiled and released for both `amd64` and `arm64` architectures. The tag of the plugin identifies the architecture. For backward compatibility, the `latest` tag is a retag of the `amd64` version.
+The plugin is compiled and released for both `amd64` and `arm64` architectures. The tag of the plugin identifies the architecture.
 
 To build both the plugin versions, type on terminal (in the root of the project):
 ```
@@ -28,7 +28,7 @@ The build process leverages on Docker, so you don't need any dependencies instal
 
 ## Use the Plugin without Kathará
 
-It is possible to leverage on this plugin as a standalone Docker Network Plugin, in order to create pure L2 networks. Please check the README of each version (inside the corresponding folder) for specific information.
+It is possible to leverage on this plugin as a standalone Docker Network Plugin, in order to create pure L2 networks. Please check the `README` of each version (inside the corresponding folder) for specific information.
 
 ### Assign MAC Addresses to network interfaces
 
