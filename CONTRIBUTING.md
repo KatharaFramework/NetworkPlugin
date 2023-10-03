@@ -9,9 +9,9 @@ By participating, you are expected to uphold this code. Please report unacceptab
 
 #### **Did you find a bug?**
 
-* **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/KatharaFramework/Kathara/issues).
+* **Ensure the bug was not already reported** by searching on GitHub under [Issues](https://github.com/KatharaFramework/NetworkPlugin/issues).
 
-* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/KatharaFramework/Kathara/issues/new). 
+* If you're unable to find an open issue addressing the problem, [open a new one](https://github.com/KatharaFramework/NetworkPlugin/issues/new/choose). 
 Be sure to include a **title and clear description**, as much relevant information as possible. Use the bug report template to create the issue.
 
 #### **Did you write a patch that fixes a bug?**
