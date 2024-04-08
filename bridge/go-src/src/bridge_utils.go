@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/docker/libnetwork/iptables"
-	"github.com/docker/libnetwork/ns"
+	"github.com/docker/docker/libnetwork/iptables"
+	"github.com/docker/docker/libnetwork/ns"
 	"github.com/vishvananda/netlink"
 	"github.com/vishvananda/netlink/nl"
 	"golang.org/x/sys/unix"
 )
 
 const (
-	bridgePrefix    = "kt"
-	bridgeLen   	= 12
+	bridgePrefix = "kt"
+	bridgeLen    = 12
 )
 
 func getBridgeName(netID string) string {
@@ -46,7 +46,7 @@ func createBridge(netID string) (string, error) {
 
 	var bridgeRule = []string{"-i", bridgeName, "-o", bridgeName, "-j", "ACCEPT"}
 
-    // Install rule in IPv4
+	// Install rule in IPv4
 	var iptablev4 = iptables.GetIptable(iptables.IPv4)
 	if err := iptablev4.ProgramRule(iptables.Filter, "FORWARD", iptables.Append, bridgeRule); err != nil {
 		return "", err

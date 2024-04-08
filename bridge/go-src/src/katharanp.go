@@ -5,8 +5,8 @@ import (
 	"net"
 	"sync"
 
+	"github.com/docker/docker/libnetwork/types"
 	"github.com/docker/go-plugins-helpers/network"
-	"github.com/docker/libnetwork/types"
 )
 
 var (
@@ -123,8 +123,8 @@ func (k *KatharaNetworkPlugin) CreateEndpoint(req *network.CreateEndpointRequest
 	if req.Options["kathara.mac_addr"] != nil {
 		// Use a pre-defined MAC Address passed by the user
 		intfInfo.MacAddress = req.Options["kathara.mac_addr"].(string)
-	} else if (req.Options["kathara.machine"] != nil && req.Options["kathara.iface"] != nil) {
-		// Generate the interface MAC Address by concatenating the machine name and the interface idx	
+	} else if req.Options["kathara.machine"] != nil && req.Options["kathara.iface"] != nil {
+		// Generate the interface MAC Address by concatenating the machine name and the interface idx
 		intfInfo.MacAddress = generateMacAddressFromID(req.Options["kathara.machine"].(string) + "-" + req.Options["kathara.iface"].(string))
 	} else if req.Interface == nil {
 		// Generate the interface MAC Address by concatenating the network id and the endpoint id
