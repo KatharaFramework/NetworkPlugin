@@ -27,7 +27,7 @@ gobuild_docker_%:
 	docker run -ti --rm -v `pwd`/go-src/:/root/go-src golang:alpine3.18 /bin/sh -c "apk add -U make && cd /root/go-src && make gobuild_$*"
 
 extbuild_docker:
-	docker run -ti --rm -v `pwd`/ext-src/:/root/ext-src alpine:latest /bin/sh -c "apk add -U make && cd /root/ext-src && make extbuild && make vde_ext"
+	docker run -ti --rm -v `pwd`/ext-src/:/root/ext-src alpine:3.18 /bin/sh -c "apk add -U make && cd /root/ext-src && make extbuild && make vde_ext"
 
 image_%: gobuild_docker_% extbuild_docker
 	mv ./go-src/src/katharanp ./img-src/

@@ -73,9 +73,11 @@ static void save_pidfile()
 
 void *plug_vde(void *arg) {
     VDECONN *conn = NULL;
+    int sigfd = -1;
+    sigset_t mask;
     struct vde_ext *ext_info = (struct vde_ext *) arg;
 
-    struct ifreq ifr;	
+    struct ifreq ifr;
 	size_t if_name_len = strlen(ext_info->name);
 	int sockfd = socket(PF_PACKET, SOCK_RAW, htons(ETH_P_ALL));
 	if (sockfd < 0) {
@@ -119,19 +121,23 @@ void *plug_vde(void *arg) {
         goto exit_failure;
     }
 
-    pthread_mutex_unlock(&ext_info->mutex);
-
-    int n = 0;
-    sigset_t mask;
-    char buf[VDE_ETHBUFSIZE];
-    struct pollfd pfd[] = {{-1,    POLLIN, 0},
-                           {sockfd, POLLIN, 0},
-                           {-1,    POLLIN, 0}};
     sigemptyset(&mask);
     sigaddset(&mask, SIGUSR1);
     pthread_sigmask(SIG_BLOCK, &mask, NULL);
-    pfd[0].fd = vde_datafd(conn);
-    pfd[2].fd = signalfd(-1, &mask, SFD_CLOEXEC);
+    if ((sigfd = signalfd(-1, &mask, SFD_CLOEXEC)) == -1) {
+        fprintf(stderr, "Unable to create signal fd for interface %s.\n", ext_info->name);
+        vde_close(conn);
+        close(sockfd);
+        goto exit_failure;
+    }
+
+    pthread_mutex_unlock(&ext_info->mutex);
+
+    int n = 0;
+    char buf[VDE_ETHBUFSIZE];
+    struct pollfd pfd[] = {{vde_datafd(conn), POLLIN, 0},
+                           {sockfd,           POLLIN, 0},
+                           {sigfd,            POLLIN, 0}};
     while (ppoll(pfd, 3, NULL, &mask) >= 0) {
         if (pfd[0].revents & POLLIN) {
             n = vde_recv(conn, buf, VDE_ETHBUFSIZE, 0);
@@ -160,6 +166,7 @@ void *plug_vde(void *arg) {
     terminate:
     vde_close(conn);
     close(sockfd);
+    close(sigfd);
     pthread_exit(NULL);
 
     exit_failure:

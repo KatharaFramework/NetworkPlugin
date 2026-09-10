@@ -47,29 +47,29 @@ static int open_tap_fd(char *name) {
 }
 
 void *plug_vde(void *arg) {
-    int tapfd = 0;
+    int tapfd = -1, sigfd = -1;
     VDECONN *conn = NULL;
+    sigset_t mask;
     struct vde_tap *tap_info = (struct vde_tap *) arg;
     if ((tapfd = open_tap_fd(tap_info->tap)) == -1)
         goto exit_failure;
 
-    if ((conn = vde_open(tap_info->url, "kathara", NULL)) == NULL) {
-        close(tapfd);
+    if ((conn = vde_open(tap_info->url, "kathara", NULL)) == NULL)
         goto exit_failure;
-    }
-    pthread_mutex_unlock(&tap_info->mutex);
 
-    int n = 0, i = 0;
-    sigset_t mask;
-    char buf[VDE_ETHBUFSIZE];
-    struct pollfd pfd[] = {{-1,    POLLIN, 0},
-                           {tapfd, POLLIN, 0},
-                           {-1,    POLLIN, 0}};
     sigemptyset(&mask);
     sigaddset(&mask, SIGUSR1);
     pthread_sigmask(SIG_BLOCK, &mask, NULL);
-    pfd[0].fd = vde_datafd(conn);
-    pfd[2].fd = signalfd(-1, &mask, SFD_CLOEXEC);
+    if ((sigfd = signalfd(-1, &mask, SFD_CLOEXEC)) == -1)
+        goto exit_failure;
+
+    pthread_mutex_unlock(&tap_info->mutex);
+
+    int n = 0;
+    char buf[VDE_ETHBUFSIZE];
+    struct pollfd pfd[] = {{vde_datafd(conn), POLLIN, 0},
+                           {tapfd,            POLLIN, 0},
+                           {sigfd,            POLLIN, 0}};
     while (ppoll(pfd, 3, NULL, &mask) >= 0) {
         if (pfd[0].revents & POLLIN) {
             n = vde_recv(conn, buf, VDE_ETHBUFSIZE, 0);
@@ -95,9 +95,14 @@ void *plug_vde(void *arg) {
     terminate:
     vde_close(conn);
     close(tapfd);
+    close(sigfd);
     pthread_exit(NULL);
 
     exit_failure:
+    if (conn != NULL)
+        vde_close(conn);
+    if (tapfd != -1)
+        close(tapfd);
     tap_info->plugged = -1;
     pthread_mutex_unlock(&tap_info->mutex);
     pthread_exit(NULL);
