@@ -2,15 +2,16 @@
 
 This repository contains the source code for the Docker Network Plugin used by Kathará.
 
-The plugin has two different versions, which are divided in the two main folders:
+The plugin has three different versions, which are divided in the two main folders:
 - [`vde`](/vde/): creates pure L2 LANs using VDE (Virtual Distributed Ethernet) software switches and tap interfaces (which is built using the `kathara/katharanp_vde` tag).
+- [`p2p`](/p2p/): creates point-to-point veth pairs between containers (which is built using the `kathara/katharanp_p2p` tag).
 - [`bridge`](/bridge/) (legacy): creates pure L2 LANs using Linux bridges and veth pairs (which is built using the `kathara/katharanp` tag).
 
 ## Build from source
 
 The plugin is compiled and released for both `amd64` and `arm64` architectures. The tag of the plugin identifies the architecture.
 
-To build both the plugin versions, type on terminal (in the root of the project):
+To build all the plugin versions, type on terminal (in the root of the project):
 ```
 $ make all_<arch>
 ```
