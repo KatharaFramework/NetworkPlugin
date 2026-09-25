@@ -17,13 +17,11 @@ const (
 	switchNumIfaces		= 65535
 )
 
-// pluginPath is the directory holding the switches' control sockets and pidfiles.
-// It defaults to the path used by the Docker plugin and can be changed with SetPluginPath.
+// Directory holding the switches' control sockets and pidfiles.
 var pluginPath = "/hosttmp/katharanp/"
 
-// SetPluginPath sets the directory holding the switches' control sockets and pidfiles.
-// The path must end with a slash.
 func SetPluginPath(path string) {
+	// The path must end with a slash.
 	pluginPath = path
 }
 
