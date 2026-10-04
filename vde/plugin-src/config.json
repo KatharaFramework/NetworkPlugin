@@ -3,6 +3,13 @@
     "documentation": "https://docs.docker.com/engine/extend/config/",
     "entrypoint": ["./entrypoint.sh"],
     "workdir": "/app",
+    "env": [
+        {
+            "name": "KATHARA_SWITCH_MODES",
+            "description": "Collision domain modes supported by this plugin (hub, switch, managed)",
+            "value": "hub,switch,managed"
+        }
+    ],
     "mounts": [
     	{
             "destination": "/run/docker/plugins",

@@ -10,7 +10,8 @@ When Docker creates networks using the plugin, a new VDE switch process is creat
 
 ## Advantages
 - Forwards arbitrary L2 multicast frames (e.g., STP);
-- Behaves like a hub, each container on the LAN receives all the L2 frames;
+- Behaves like a hub by default, each container on the LAN receives all the L2 frames;
+- Can also behave like a learning switch or like a managed switch with VLANs, see [Switch Modes](#switch-modes);
 - Does not generate undesired noise (e.g., [IPv6 router solicitations](https://github.com/KatharaFramework/NetworkPlugin/issues/4));
 - You can use any L3 network, even the Docker default network.
 
@@ -30,6 +31,64 @@ docker network create --driver=kathara/katharanp_vde:arm64 --ipam-driver=null l2
 ```
 
 To avoid assigning any IP subnet you **MUST** use `--ipam-driver=null` when creating networks with Docker plugin. Otherwise, the endpoint inside the container will always receive an IP address from the default pool.
+
+### Switch Modes
+
+The `kathara.switch.mode` driver option selects the behaviour of the VDE switch created for a network:
+
+| Mode | Behaviour |
+|------|-----------|
+| `hub` (default) | Each frame is sent to all the containers of the network. |
+| `switch` | The switch learns the MAC addresses and sends a frame only to its destination. It cannot be configured. |
+| `managed` | Learning switch with VLANs and a management socket. |
+
+```bash
+docker network create --driver=kathara/katharanp_vde:amd64 --ipam-driver=null -o kathara.switch.mode=switch l2net
+```
+
+**NOTE**: a VDE switch which is not a hub only accepts the frames with an 802.1Q tag on the ports which are members of their VLAN. A VLAN trunk between two containers therefore needs a `hub` network, or a `managed` network whose ports are tagged members of the VLANs (`kathara.switch.tagged`); it does not cross a `switch` network.
+
+The plugin declares the modes it supports in its `KATHARA_SWITCH_MODES` environment variable (`docker plugin inspect -f '{{.Settings.Env}}' kathara/katharanp_vde:amd64`), so that a client can refuse a mode instead of silently getting a hub from an older version.
+
+#### Ports of a Managed Switch
+
+On a `managed` network, these driver options can be given when a container is connected:
+
+| Option | Meaning |
+|--------|---------|
+| `kathara.switch.label` | Name of the switch port, shown in its description (`kathara <label>`). Kathará uses `<device>:eth<N>`. |
+| `kathara.switch.vlan` | VLAN (1-4094) of the untagged frames of the port (access port). Default: VLAN 0, the default VLAN of the switch. |
+| `kathara.switch.tagged` | VLANs whose frames are exchanged with an 802.1Q tag on the port (trunk port), separated by commas or by spaces. |
+
+```bash
+docker network create --driver=kathara/katharanp_vde:amd64 --ipam-driver=null -o kathara.switch.mode=managed l2net
+docker network connect --driver-opt kathara.switch.label=pc1:eth0 --driver-opt kathara.switch.vlan=10 l2net pc1
+# The docker command line splits the values of --driver-opt on commas: separate the VLANs with spaces
+docker network connect --driver-opt kathara.switch.label=r1:eth0 --driver-opt "kathara.switch.tagged=10 20" l2net r1
+```
+
+Each endpoint of a managed switch is plugged into a port reserved for it. A port with a label is kept when its container leaves the network: when a container with the same label joins again (e.g. when it is restarted), it finds the same port, with the configuration made in the meantime through the management socket. The declared VLANs are applied when the port is created, and again only when they are not the ones declared before. The port of an endpoint without label is removed when the endpoint leaves.
+
+#### Management Socket
+
+A managed switch has a VDE management socket in `/tmp/katharanp/<SWITCH NAME>/mgmt` on the host (the switch name is `kt-<NETWORK ID>`, as explained below). It has the group and the group/other access rights of the Docker socket: the users who can use Docker can manage the switch.
+
+```bash
+$ vdeterm /tmp/katharanp/kt-795c43f8b52d/mgmt
+vde$ port/print
+Port 0001 untagged_vlan=0010 ACTIVE - NOT Unnamed Allocatable
+ Current User: root Access Control: (User: NONE - Group: NONE)
+  -- endpoint ID 0003 module unix prog   : kathara pc1:eth0 user=0 pid=45502
+1000 Success
+
+vde$ vlan/create 30
+1000 Success
+
+vde$ port/setvlan 1 30
+1000 Success
+```
+
+`help` lists the commands: `port/print`, `vlan/print`, `vlan/create`, `port/setvlan` (untagged VLAN of a port), `vlan/addport` (tagged VLAN of a port), `hash/print` (MAC address table), `port/sethub`, `fstp/setfstp`... In Kathará, the `kathara switch` command and the `exec_link` API method send these commands.
 
 ### Attach Physical Interfaces and VLANs
 **NOTE**: This feature is ONLY available for Linux-based operating systems.
