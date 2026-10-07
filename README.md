@@ -3,7 +3,7 @@
 This repository contains the source code for the Docker Network Plugin used by Kathará.
 
 The plugin has two different versions, which are divided in the two main folders:
-- [`vde`](/vde/): creates pure L2 LANs using VDE (Virtual Distributed Ethernet) software switches and tap interfaces (which is built using the `kathara/katharanp_vde` tag).
+- [`vde`](/vde/): creates pure L2 LANs using VDE (Virtual Distributed Ethernet) software switches and tap interfaces (which is built using the `kathara/katharanp_vde` tag). A LAN is a hub by default, and can also be a learning switch or a managed switch with VLANs (see [Switch Modes](/vde/README.md#switch-modes)).
 - [`bridge`](/bridge/) (legacy): creates pure L2 LANs using Linux bridges and veth pairs (which is built using the `kathara/katharanp` tag).
 
 ## Build from source

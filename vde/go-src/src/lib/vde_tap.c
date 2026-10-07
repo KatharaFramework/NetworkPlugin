@@ -23,6 +23,8 @@ struct vde_tap {
     int plugged;
     char *tap;
     char *url;
+    int port;
+    char *descr;
 };
 
 static int open_tap_fd(char *name) {
@@ -54,7 +56,9 @@ void *plug_vde(void *arg) {
     if ((tapfd = open_tap_fd(tap_info->tap)) == -1)
         goto exit_failure;
 
-    if ((conn = vde_open(tap_info->url, "kathara", NULL)) == NULL)
+    /* A port number greater than 0 asks the switch for that port, otherwise the first free one is taken */
+    struct vde_open_args open_args = {tap_info->port, NULL, 0700};
+    if ((conn = vde_open(tap_info->url, tap_info->descr, tap_info->port > 0 ? &open_args : NULL)) == NULL)
         goto exit_failure;
 
     sigemptyset(&mask);
@@ -108,9 +112,9 @@ void *plug_vde(void *arg) {
     pthread_exit(NULL);
 }
 
-uintptr_t vde_tap_plug(char *name, char *sock) {
+uintptr_t vde_tap_plug(char *name, char *sock, int port, char *descr) {
     pthread_t *th_ptr;
-    struct vde_tap tap_info = {PTHREAD_MUTEX_INITIALIZER, 0, name, sock};
+    struct vde_tap tap_info = {PTHREAD_MUTEX_INITIALIZER, 0, name, sock, port, descr};
 
     if ((th_ptr = malloc(sizeof(pthread_t))) == NULL)
         return 0;
