@@ -76,7 +76,12 @@ void *plug_vde(void *arg) {
             if (n == 0)
                 goto terminate;
 
-            write(tapfd, buf, n);
+            if (n < 0) {
+                if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
+                    goto terminate;
+            } else {
+                write(tapfd, buf, n);
+            }
         }
 
         if (pfd[1].revents & POLLIN) {
@@ -84,7 +89,12 @@ void *plug_vde(void *arg) {
             if (n == 0)
                 goto terminate;
 
-            vde_send(conn, buf, n, 0);
+            if (n < 0) {
+                if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
+                    goto terminate;
+            } else {
+                vde_send(conn, buf, n, 0);
+            }
         }
 
         if (pfd[2].revents & POLLIN) {

@@ -144,18 +144,29 @@ void *plug_vde(void *arg) {
             if (n == 0)
                 goto terminate;
 
-		    send(sockfd, buf, n, 0);
+            if (n < 0) {
+                if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
+                    goto terminate;
+            } else {
+                send(sockfd, buf, n, 0);
+            }
         }
 
         if (pfd[1].revents & POLLIN) {
             struct sockaddr_ll recv_addr;
-	        socklen_t fromlen = sizeof(recv_addr);
+            socklen_t fromlen = sizeof(recv_addr);
             n = recvfrom(sockfd, buf, VDE_ETHBUFSIZE, MSG_TRUNC, (struct sockaddr *) &recv_addr, &fromlen);
             if (n == 0)
                 goto terminate;
 
-            if (recv_addr.sll_pkttype != PACKET_OUTGOING)
+            /* MSG_TRUNC makes recvfrom() return the real frame length, which may exceed VDE_ETHBUFSIZE. */
+            /* The frame did not fit in buf and cannot be carried by VDE, so drop like a real switch. */
+            if (n < 0) {
+                if (errno != EINTR && errno != EAGAIN && errno != EWOULDBLOCK)
+                    goto terminate;
+            } else if (n <= VDE_ETHBUFSIZE && recv_addr.sll_pkttype != PACKET_OUTGOING) {
                 vde_send(conn, buf, n, 0);
+            }
         }
 
         if (pfd[2].revents & POLLIN) {
