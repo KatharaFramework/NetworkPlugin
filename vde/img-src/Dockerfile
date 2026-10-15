@@ -29,7 +29,7 @@ RUN git clone https://github.com/virtualsquare/vde-2 && \
     mv ../support-for-jumbo.patch ./support-for-jumbo.patch && \
     patch -p1 < support-for-jumbo.patch && \
     mkdir build && cd build && \
-    cmake -DENABLE_CRYPTCAB=OFF -DENABLE_VDE_OVER_NS=OFF -DENABLE_ROUTER=OFF -DENABLE_VXLAN=OFF -DENABLE_TUNTAP=OFF -DENABLE_PCAP=OFF .. && \
+    cmake -DCMAKE_C_FLAGS=-DVDE_PQ2 -DENABLE_CRYPTCAB=OFF -DENABLE_VDE_OVER_NS=OFF -DENABLE_ROUTER=OFF -DENABLE_VXLAN=OFF -DENABLE_TUNTAP=OFF -DENABLE_PCAP=OFF .. && \
     make && make install && \
     cd .. && rm -rf vde-2/
 
