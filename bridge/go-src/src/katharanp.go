@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 	"sync"
+	"strconv"
 
 	"github.com/docker/docker/libnetwork/types"
 	"github.com/docker/go-plugins-helpers/network"
@@ -55,7 +56,34 @@ func (k *KatharaNetworkPlugin) CreateNetwork(req *network.CreateNetworkRequest) 
 		return types.ForbiddenErrorf("network %s exists", req.NetworkID)
 	}
 
-	bridgeName, err := createBridge(req.NetworkID)
+	/* Create a temp options map */
+	opts := make(map[string]uint64)
+	/* User options (-o) are nested under the generic data key */
+	generic, _ := req.Options["com.docker.network.generic"].(map[string]interface{})
+	if ageingOpt, ok := generic["kathara.ageing_time"].(string); ok {
+		/* If user passed an ageing time, use it */
+		ageing, err := strconv.ParseUint(ageingOpt, 10, 32)
+		if err != nil {
+			return types.InvalidParameterErrorf("invalid ageing %q: must be a 32-bit value", ageingOpt)
+		}
+		opts["ageing"] = ageing
+	} else {
+		/* Else, use default (0) */
+		opts["ageing"] = 0
+	}
+	if maskOpt, ok := generic["kathara.group_fwd_mask"].(string); ok {
+		/* If user passed a group fwd mask, use it */
+		mask, err := strconv.ParseUint(maskOpt, 0, 16)
+		if err != nil || mask&0x0007 != 0 {
+			return types.InvalidParameterErrorf("invalid group_fwd_mask %q: must be a 16-bit value with bits 0-2 unset", maskOpt)
+		}
+		opts["group_fwd_mask"] = mask
+	} else {
+		/* Else, use default (0xfff8) */
+		opts["group_fwd_mask"] = 0xfff8
+	}
+
+	bridgeName, err := createBridge(req.NetworkID, opts)
 	if err != nil {
 		return err
 	}

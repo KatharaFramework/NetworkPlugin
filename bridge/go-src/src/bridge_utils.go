@@ -20,7 +20,7 @@ func getBridgeName(netID string) string {
 	return bridgePrefix + "-" + netID[:bridgeLen]
 }
 
-func createBridge(netID string) (string, error) {
+func createBridge(netID string, opts map[string]uint64) (string, error) {
 	bridgeName := getBridgeName(netID)
 
 	exists, err := bridgeInterfaceExists(bridgeName)
@@ -58,14 +58,14 @@ func createBridge(netID string) (string, error) {
 		return "", err
 	}
 
-	if err := patchBridge(bridge); err != nil {
+	if err := configureBridge(bridge, opts); err != nil {
 		return "", err
 	}
 
 	return bridgeName, nil
 }
 
-func patchBridge(bridge netlink.Link) error {
+func configureBridge(bridge netlink.Link, opts map[string]uint64) error {
 	// Creates a new RTM_NEWLINK request
 	// NLM_F_ACK is used to receive acks when operations are executed
 	req := nl.NewNetlinkRequest(unix.RTM_NEWLINK, unix.NLM_F_ACK)
@@ -82,8 +82,8 @@ func patchBridge(bridge netlink.Link) error {
 	linkInfo.AddRtAttr(nl.IFLA_INFO_KIND, nl.NonZeroTerminated(bridge.Type()))
 
 	data := linkInfo.AddRtAttr(nl.IFLA_INFO_DATA, nil)
-	data.AddRtAttr(nl.IFLA_BR_AGEING_TIME, nl.Uint32Attr(0))
-	data.AddRtAttr(nl.IFLA_BR_GROUP_FWD_MASK, nl.Uint16Attr(0xfff8))
+	data.AddRtAttr(nl.IFLA_BR_AGEING_TIME, nl.Uint32Attr(uint32(opts["ageing"])))
+	data.AddRtAttr(nl.IFLA_BR_GROUP_FWD_MASK, nl.Uint16Attr(uint16(opts["group_fwd_mask"])))
 
 	req.AddData(linkInfo)
 

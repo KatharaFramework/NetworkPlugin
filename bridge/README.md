@@ -33,6 +33,19 @@ docker network create --driver=kathara/katharanp:arm64 --ipam-driver=null l2net
 
 To avoid assigning any IP subnet you **MUST** use `--ipam-driver=null` when creating networks with Docker plugin. Otherwise, the endpoint inside the container will always receive an IP address from the default pool.
 
+### Network Options
+The Linux bridge of each network can be tuned by passing options with `-o` when creating the network:
+
+| Option                    | Description                                                                                                                                       | Default  |
+|---------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|----------|
+| `kathara.ageing_time`     | Ageing time of the MAC addresses learned by the bridge, in **centiseconds** (e.g., `300` = 3 seconds). With `0`, the bridge does not learn MAC addresses and floods all frames on every port (like a hub). | `0`      |
+| `kathara.group_fwd_mask`  | Bitmask of the link-local group addresses (`01:80:c2:00:00:0X`) forwarded by the bridge, where bit `X` enables forwarding of address `X`. Decimal or hex (`0x...`) values are accepted. Bits 0-2 (STP, Pause, LACP) cannot be set, as they are restricted by the kernel. | `0xfff8` |
+
+For example, to create a network that learns MAC addresses for 3 seconds and only forwards LLDP frames (`01:80:c2:00:00:0e`, bit 14):
+```bash
+docker network create --driver=kathara/katharanp:amd64 --ipam-driver=null -o kathara.ageing_time=300 -o kathara.group_fwd_mask=0x4000 l2net
+```
+
 ### Attach Physical Interfaces and VLANs
 **NOTE**: This feature is ONLY available for Linux-based operating systems.
 
